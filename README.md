@@ -21,24 +21,34 @@ Fish Tool is a modern, **all-in-one command-line toolkit** designed for develope
 
 ---
 
-### 🗂 Core AI & Module Operations
+### 🧠 AI Module Development
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|-----------------|
-| `create` | Create a new AI module only. | `-n, --name <id>` Name of the module<br>`--template <basic/rlhf/embedding/vision>` Prebuilt module template<br>`--from <path>` Initialize from existing module or config<br>`--config <file>` Custom FSON configuration for module |
-| `delete` | Remove modules, datasets, or checkpoints. | `-f, --force` Skip confirmation<br>`--module <id>` Remove module<br>`--dataset <id>` Remove dataset<br>`--checkpoint <id>` Remove checkpoint |
-| `generate` | Generate datasets or synthetic data. | `-n, --name <dataset>` Dataset name<br>`--type <text/image/tabular/fson>` Dataset type<br>`--size <n>` Number of samples<br>`--template <template_name>` Template/schema<br>`--seed <n>` Random seed<br>`--output <path>` Output directory |
-| `train` | Train an AI module with a dataset. | `-m, --module <name>` Target module<br>`-d, --dataset <name>` Dataset for training<br>`--resume <checkpoint>` Resume from checkpoint<br>`--epochs <n>` Epoch count<br>`--steps <n>` Max steps<br>`--lr <rate>` Learning rate<br>`--eval` Run evaluation<br>`--save-every <n>` Save checkpoints periodically |
-| `merge` | Merge modules or datasets. | `--modules <list>` Modules to merge<br>`--datasets <list>` Datasets to merge<br>`--strategy <concat/average/overwrite>` Merge strategy |
-| `prune` | Remove unnecessary module parameters or dataset samples. | `--module <name>` Module to prune<br>`--dataset <name>` Dataset to prune<br>`--threshold <value>` Pruning threshold<br>`--dry-run` Show actions only |
-| `decay` | Apply weight decay or schedule decay to modules. | `--module <name>` Target module<br>`--rate <value>` Decay rate<br>`--steps <n>` Number of decay steps |
-| `rebase` | Reapply training or merge changes onto a checkpoint. | `--module <name>` Module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft|hard>` Rebase mode |
-| `introspect` | Inspect internal module structures. | `--module <name>` Module<br>`--layers` Show layers<br>`--weights` Weight stats<br>`--tokens` Tokenization info<br>`--graph` Computation graph<br>`--params` Param counts<br>`--activations` Activation traces |
-| `export` | Export a module or checkpoint. | `--module <name>` Module<br>`-f, --format <onnx/jelly/bin/fson/json>` Format<br>`--output <path>` Output file |
-| `import` | Import modules, datasets, or checkpoints. | `-f, --file <path>` Input file<br>`--type <module/dataset/checkpoint>` Asset type<br>`--name <id>` Assigned name |
-| `show` | List installed modules, datasets, or checkpoints. | `--modules` List modules<br>`--datasets` List datasets<br>`--checkpoints` List checkpoints<br>`--config` Default configs<br>`--system` System info |
-| `view` | Display dataset samples, metrics, or checkpoints. | `--dataset <name>` Dataset preview<br>`--samples <n>` Sample count<br>`--metrics <module>` Training metrics<br>`--checkpoint <id>` Checkpoint info |
-| `help` | Help system. | `--examples` Show examples<br>`--man` Full manual |
+| `create` | Create a new AI module. | `-n, --name <id>` Module name<br>`--template <basic/rlhf/embedding/vision>` Module template<br>`--from <path>` Initialize from existing module<br>`--config <file>` FSON config |
+| `train` | Train an AI module (requires dataset). | `-m, --module <name>` Module to train<br>`-d, --dataset <name>` Dataset<br>`--resume <checkpoint>` Resume training<br>`--epochs <n>`, `--steps <n>`<br>`--lr <rate>` Learning rate<br>`--eval` Evaluate<br>`--save-every <n>` Checkpoint frequency |
+| `merge` | Merge modules into a new module. | `--modules <list>` Modules to merge<br>`--strategy <concat/average/overwrite>` Merge method |
+| `prune` | Prune parameters from a module. | `--module <name>` Module<br>`--threshold <value>` Pruning threshold<br>`--dry-run` No changes |
+| `decay` | Apply weight/learning rate decay. | `--module <name>` Module<br>`--rate <value>` Decay rate<br>`--steps <n>` Steps |
+| `rebase` | Reapply changes or retrain on a checkpoint. | `--module <name>` Module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft|hard>` Strategy |
+| `introspect` | Inspect module internals. | `--module <name>` Module<br>`--layers`<br>`--weights`<br>`--tokens`<br>`--graph`<br>`--params`<br>`--activations` |
+| `export` | Export a module or checkpoint. | `--module <name>` Module<br>`-f, --format <onnx/jelly/bin/fson/json>` Format<br>`--output <path>` Destination |
+| `import` | Import a module or checkpoint. | `--file <path>` Input file<br>`--type <module/checkpoint>` Asset type<br>`--name <id>` Assigned name |
+| `show` | List module-related assets. | `--modules` Modules<br>`--checkpoints` Checkpoints<br>`--config` Defaults<br>`--system` System info |
+| `delete` | Delete modules or checkpoints. | `--module <id>` Remove module<br>`--checkpoint <id>` Remove checkpoint<br>`-f, --force` Force removal |
+
+### 🫧 Dataset Management
+
+| **Command** | **Description** | **Common Flags** |
+|-------------|-----------------|-----------------|
+| `spawn` | Generate new datasets or synthetic data. | `-n, --name <dataset>` Dataset name<br>`--type <text/image/tabular/fson>` Dataset type<br>`--size <n>` Number of samples<br>`--template <name>` Schema template<br>`--seed <n>` Random seed<br>`--output <path>` Output path |
+| `weave` | Merge datasets into a new dataset. | `--datasets <list>` Dataset names<br>`--strategy <concat/dedupe/overlay>` Merge strategy |
+| `trim` | Remove samples from a dataset. | `--dataset <name>` Dataset<br>`--threshold <value>` Filter threshold<br>`--dry-run` Preview changes |
+| `peek` | Inspect dataset contents. | `--dataset <name>` Dataset<br>`--samples <n>` Number of samples to show |
+| `absorb` | Import a dataset into the system. | `--file <path>` Input file<br>`--type dataset` Asset type<br>`--name <id>` Assigned dataset name |
+| `shed` | Export a dataset to a file. | `--dataset <name>` Dataset<br>`--format <json/fson/csv/bin>` Format<br>`--output <path>` Destination file |
+| `catalog` | List available datasets. | `--datasets` Show all datasets |
+| `purge` | Permanently delete a dataset. | `--dataset <id>` Target dataset<br>`-f, --force` Skip confirmation |
 
 ---
 
