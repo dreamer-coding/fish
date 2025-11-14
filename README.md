@@ -25,13 +25,13 @@ Fish Tool is a modern, **all-in-one command-line toolkit** designed for develope
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|-----------------|
-| `create` | Create a new AI module, dataset, or project template. | `-t, --type <module|dataset|project>` Component type<br>`-n, --name <id>` Name of component<br>`--template <basic|rlhf|embedding|vision>` Prebuilt template<br>`--from <path>` Initialize from path<br>`--config <file>` Custom configuration |
+| `create` | Create a new AI module, dataset, or project template. | `-t, --type <module/dataset/project>` Component type<br>`-n, --name <id>` Name of component<br>`--template <basic/rlhf/embedding/vision>` Prebuilt template<br>`--from <path>` Initialize from path<br>`--config <file>` Custom configuration |
 | `delete` | Remove modules, datasets, or checkpoints. | `-f, --force` Skip confirmation<br>`--module <name>` Delete module<br>`--dataset <name>` Delete dataset<br>`--checkpoint <id>` Remove checkpoint |
 | `train` | Train an AI module with a dataset. | `-m, --module <name>` Target module<br>`-d, --dataset <name>` Training dataset<br>`--resume <checkpoint>` Resume training<br>`--epochs <n>` Number of epochs<br>`--steps <n>` Maximum steps<br>`--lr <rate>` Learning rate<br>`--eval` Run evaluation<br>`--save-every <n>` Save checkpoints periodically |
 | `audit` | Run performance, bias, and safety audits. | `-m, --module <name>` Module to audit<br>`--bias` Bias detection<br>`--perf` Performance metrics<br>`--safety` Safety checks<br>`--explain` Explain results |
 | `introspect` | Inspect module internals (layers, weights, tokens, graph). | `-m, --module <name>` Target module<br>`--layers` Show layer structure<br>`--weights` Weight stats<br>`--tokens` Tokenizer info<br>`--graph` Computation graph<br>`--params` Parameter count<br>`--activations` Activation samples |
-| `export` | Export modules, weights, or checkpoints. | `-m, --module <name>` Module to export<br>`-f, --format <onnx|jelly|bin|json>` Export format<br>`--output <path>` Output path |
-| `import` | Import modules, datasets, or checkpoints. | `-f, --file <path>` Input file<br>`--type <module|dataset|checkpoint>` Asset type<br>`--name <id>` Assign name |
+| `export` | Export modules, weights, or checkpoints. | `-m, --module <name>` Module to export<br>`-f, --format <onnx/jelly/bin/fson/json>` Export format<br>`--output <path>` Output path |
+| `import` | Import modules, datasets, or checkpoints. | `-f, --file <path>` Input file<br>`--type <module/dataset/checkpoint>` Asset type<br>`--name <id>` Assign name |
 | `show` | List installed modules, datasets, or checkpoints. | `--modules` Show modules<br>`--datasets` Show datasets<br>`--checkpoints` Show checkpoints<br>`--config` Show default configs<br>`--system` Show system info |
 | `view` | Display dataset samples, training metrics, or checkpoint info. | `--dataset <name>` Preview dataset<br>`--samples <n>` Show N samples<br>`--metrics <name>` Show metrics<br>`--checkpoint <id>` Checkpoint details |
 | `help` | Display help for commands. | `--examples` Show usage examples<br>`--man` Full manual |
