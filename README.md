@@ -25,20 +25,20 @@ Fish Tool is a modern, **all-in-one command-line toolkit** designed for develope
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|-----------------|
-| `create` | Create a new AI module. | `-n, --name <id>` Name of the module<br>`--template <basic/rlhf/embedding/vision>` Prebuilt module template<br>`--from <path>` Initialize from existing module or config<br>`--config <file>` Custom FSON configuration for module |
-| `delete` | Remove modules, datasets, or checkpoints. | `-f, --force` Skip confirmation<br>--checkpoint <id>` Remove checkpoint |
-| `generate` | Generate new datasets or synthetic data for modules. | `-n, --name <dataset>` Dataset name<br>`--type <text/image/tabular/fson>` Dataset type<br>`--size <n>` Number of samples to generate<br>`--template <template_name>` Template or schema for generation<br>`--seed <n>` Random seed for reproducibility<br>`--output <path>` Output location |
-| `train` | Train an AI module with a dataset. | `-m, --module <name>` Target module<br>`-d, --dataset <name>` Training dataset<br>`--resume <checkpoint>` Resume training<br>`--epochs <n>` Number of epochs<br>`--steps <n>` Maximum steps<br>`--lr <rate>` Learning rate<br>`--eval` Run evaluation<br>`--save-every <n>` Save checkpoints periodically |
-| `merge` | Merge two or more modules or datasets. | `-m, --modules <list>` List of modules to merge<br>`-d, --datasets <list>` Datasets to merge<br>`--strategy <concat/average/overwrite>` Merge strategy |
-| `prune` | Remove unnecessary parameters or dataset samples. | `-m, --module <name>` Target module<br>`-d, --dataset <name>` Target dataset<br>`--threshold <value>` Pruning threshold<br>`--dry-run` Show actions without applying |
-| `decay` | Apply weight decay or learning decay schedules. | `-m, --module <name>` Target module<br>`--rate <value>` Decay rate<br>`--steps <n>` Number of steps to decay |
-| `rebase` | Reapply training or merge changes into a module checkpoint. | `-m, --module <name>` Target module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft|hard>` Rebase strategy |
-| `introspect` | Inspect module internals (layers, weights, tokens, graph). | `-m, --module <name>` Target module<br>`--layers` Show layer structure<br>`--weights` Weight stats<br>`--tokens` Tokenizer info<br>`--graph` Computation graph<br>`--params` Parameter count<br>`--activations` Activation samples |
-| `export` | Export modules, weights, or checkpoints. | `-m, --module <name>` Module to export<br>`-f, --format <onnx/jelly/bin/fson/json>` Export format<br>`--output <path>` Output path |
-| `import` | Import modules, datasets, or checkpoints. | `-f, --file <path>` Input file<br>`--type <module/dataset/checkpoint>` Asset type<br>`--name <id>` Assign name |
-| `show` | List installed modules, datasets, or checkpoints. | `--modules` Show modules<br>`--datasets` Show datasets<br>`--checkpoints` Show checkpoints<br>`--config` Show default configs<br>`--system` Show system info |
-| `view` | Display dataset samples, training metrics, or checkpoint info. | `--dataset <name>` Preview dataset<br>`--samples <n>` Show N samples<br>`--metrics <name>` Show metrics<br>`--checkpoint <id>` Checkpoint details |
-| `help` | Display help for commands. | `--examples` Show usage examples<br>`--man` Full manual |
+| `create` | Create a new AI module only. | `-n, --name <id>` Name of the module<br>`--template <basic/rlhf/embedding/vision>` Prebuilt module template<br>`--from <path>` Initialize from existing module or config<br>`--config <file>` Custom FSON configuration for module |
+| `delete` | Remove modules, datasets, or checkpoints. | `-f, --force` Skip confirmation<br>`--module <id>` Remove module<br>`--dataset <id>` Remove dataset<br>`--checkpoint <id>` Remove checkpoint |
+| `generate` | Generate datasets or synthetic data. | `-n, --name <dataset>` Dataset name<br>`--type <text/image/tabular/fson>` Dataset type<br>`--size <n>` Number of samples<br>`--template <template_name>` Template/schema<br>`--seed <n>` Random seed<br>`--output <path>` Output directory |
+| `train` | Train an AI module with a dataset. | `-m, --module <name>` Target module<br>`-d, --dataset <name>` Dataset for training<br>`--resume <checkpoint>` Resume from checkpoint<br>`--epochs <n>` Epoch count<br>`--steps <n>` Max steps<br>`--lr <rate>` Learning rate<br>`--eval` Run evaluation<br>`--save-every <n>` Save checkpoints periodically |
+| `merge` | Merge modules or datasets. | `--modules <list>` Modules to merge<br>`--datasets <list>` Datasets to merge<br>`--strategy <concat/average/overwrite>` Merge strategy |
+| `prune` | Remove unnecessary module parameters or dataset samples. | `--module <name>` Module to prune<br>`--dataset <name>` Dataset to prune<br>`--threshold <value>` Pruning threshold<br>`--dry-run` Show actions only |
+| `decay` | Apply weight decay or schedule decay to modules. | `--module <name>` Target module<br>`--rate <value>` Decay rate<br>`--steps <n>` Number of decay steps |
+| `rebase` | Reapply training or merge changes onto a checkpoint. | `--module <name>` Module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft|hard>` Rebase mode |
+| `introspect` | Inspect internal module structures. | `--module <name>` Module<br>`--layers` Show layers<br>`--weights` Weight stats<br>`--tokens` Tokenization info<br>`--graph` Computation graph<br>`--params` Param counts<br>`--activations` Activation traces |
+| `export` | Export a module or checkpoint. | `--module <name>` Module<br>`-f, --format <onnx/jelly/bin/fson/json>` Format<br>`--output <path>` Output file |
+| `import` | Import modules, datasets, or checkpoints. | `-f, --file <path>` Input file<br>`--type <module/dataset/checkpoint>` Asset type<br>`--name <id>` Assigned name |
+| `show` | List installed modules, datasets, or checkpoints. | `--modules` List modules<br>`--datasets` List datasets<br>`--checkpoints` List checkpoints<br>`--config` Default configs<br>`--system` System info |
+| `view` | Display dataset samples, metrics, or checkpoints. | `--dataset <name>` Dataset preview<br>`--samples <n>` Sample count<br>`--metrics <module>` Training metrics<br>`--checkpoint <id>` Checkpoint info |
+| `help` | Help system. | `--examples` Show examples<br>`--man` Full manual |
 
 ---
 
