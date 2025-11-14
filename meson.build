@@ -1,4 +1,4 @@
-project('Fossil App', 'c', 'cpp',
+project('Fish', 'c', 'cpp',
     meson_version: '>=1.8.0',
     license: 'Apache-2.0',
     version: '0.1.0',
