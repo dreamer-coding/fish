@@ -25,7 +25,7 @@ Fish Tool is a modern, **all-in-one command-line toolkit** designed for develope
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|-----------------|
-| `create` | Create a new AI module. | `-n, --name <id>` Name of the module<br>`--template <basic/rlhf/embedding/vision>` Prebuilt module template<br>`--from <path>` Initialize from existing module or config<br>`--config <file>` Custom FSON/YAML configuration for module |
+| `create` | Create a new AI module. | `-n, --name <id>` Name of the module<br>`--template <basic/rlhf/embedding/vision>` Prebuilt module template<br>`--from <path>` Initialize from existing module or config<br>`--config <file>` Custom FSON configuration for module |
 | `delete` | Remove modules, datasets, or checkpoints. | `-f, --force` Skip confirmation<br>`--module <name>` Delete module<br>`--dataset <name>` Delete dataset<br>`--checkpoint <id>` Remove checkpoint |
 | `generate` | Generate new datasets or synthetic data for modules. | `-n, --name <dataset>` Dataset name<br>`--type <text/image/tabular/fson>` Dataset type<br>`--size <n>` Number of samples to generate<br>`--template <template_name>` Template or schema for generation<br>`--seed <n>` Random seed for reproducibility<br>`--output <path>` Output location |
 | `train` | Train an AI module with a dataset. | `-m, --module <name>` Target module<br>`-d, --dataset <name>` Training dataset<br>`--resume <checkpoint>` Resume training<br>`--epochs <n>` Number of epochs<br>`--steps <n>` Maximum steps<br>`--lr <rate>` Learning rate<br>`--eval` Run evaluation<br>`--save-every <n>` Save checkpoints periodically |
