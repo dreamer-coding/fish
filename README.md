@@ -30,7 +30,7 @@ Fish Tool is a modern, **all-in-one command-line toolkit** designed for develope
 | `merge` | Merge modules into a new module. | `--modules <list>` Modules to merge<br>`--strategy <concat/average/overwrite>` Merge method |
 | `prune` | Prune parameters from a module. | `--module <name>` Module<br>`--threshold <value>` Pruning threshold<br>`--dry-run` No changes |
 | `decay` | Apply weight/learning rate decay. | `--module <name>` Module<br>`--rate <value>` Decay rate<br>`--steps <n>` Steps |
-| `rebase` | Reapply changes or retrain on a checkpoint. | `--module <name>` Module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft|hard>` Strategy |
+| `rebase` | Reapply changes or retrain on a checkpoint. | `--module <name>` Module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft/hard>` Strategy |
 | `introspect` | Inspect module internals. | `--module <name>` Module<br>`--layers`<br>`--weights`<br>`--tokens`<br>`--graph`<br>`--params`<br>`--activations` |
 | `export` | Export a module or checkpoint. | `--module <name>` Module<br>`-f, --format <onnx/jelly/bin/fson/json>` Format<br>`--output <path>` Destination |
 | `import` | Import a module or checkpoint. | `--file <path>` Input file<br>`--type <module/checkpoint>` Asset type<br>`--name <id>` Assigned name |
