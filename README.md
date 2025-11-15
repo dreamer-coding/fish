@@ -86,7 +86,7 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 
 A small, illustrative dataset for basic arithmetic operations. Designed for testing and training lightweight AI reasoning models.
 
-```json
+```ini
 {
   name: cstr: "ArithmeticModule",
   type: cstr: "module",
@@ -122,7 +122,7 @@ A small, illustrative dataset for basic arithmetic operations. Designed for test
 
 A small dataset for basic arithmetic operations, intended for testing or training AI reasoning models.
 
-```json
+```ini
 {
   name: cstr: "SimpleMathDataset",
   type: cstr: "dataset",
