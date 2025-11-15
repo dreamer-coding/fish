@@ -20,7 +20,7 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 | `audit` | Analyze model behavior for safety, bias, drift, or anomalies. | `--drift`<br>`--bias`<br>`--toxicity`<br>`--explain`<br>`--export <path>` |
 | `show` | Display information about modules, datasets, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
 | `view` | View raw dataset entries, tokens, or training samples. | `-n, --number <count>`<br>`--sample` Random selection<br>`--shuffle` |
-| `export` | Export a model, dataset, or training result. | `-f, --format <json/fson/bin/onnx/tensor>`<br>`--dest <path>` |
+| `export`    | Export datasets or AI modules to various formats. | `-f, --file <path>` Output file path<br>`-t, --type <format>` Output format (`fson`, `json`, `yaml`, `toml`, `markdown`, `html`, `xml`, `csv`, `text`, `ini`)<br>`--pretty` Pretty-print output (if supported)<br>`--include-meta` Include semantic_meta and tags<br>`--overwrite` Overwrite existing file |
 | `import` | Import a dataset, module, or configuration. | `--validate`<br>`--name <id>`<br>`--replace` |
 | `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` |
 | `merge` | Merge datasets or modules. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
