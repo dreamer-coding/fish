@@ -90,86 +90,36 @@ This sample shows how Jellyfish AI uses FSON to package each reasoning step as a
 ```fson
 {
   fson_version: cstr: "1.0",
-  model_name: cstr: "AquaNet",
-  model_type: cstr: "CNN",
-  created_by: cstr: "Michael Brockus",
-  description: cstr: "Marine life image classification model with reasoning trace.",
 
-  chain: array: [
-    object: {
-      identity: object: {
-        commit_hash: cstr: "ABCDEF123456...",
-        parent_hashes: array: [cstr: "000001...", cstr: "000002..."],
-        commit_message: cstr: "Initial model training",
-        author_id: cstr: "DEVICE123",
-        committer_id: cstr: "AI_AGENT_01",
-        is_merge_commit: i32: 0,
-        detached: i32: 0
+  model: object: {
+    name: cstr: "AquaNet",
+    version: cstr: "1.0",
+    model_type: cstr: "CNN",
+
+    metadata_file: cstr: "meta.fson",
+
+    chain_files: array: [
+      cstr: "chains/chain_0001.fson",
+      cstr: "chains/chain_0002.fson"
+    ]
+  },
+
+  architecture: object: {
+    layers: array: [
+      object: {
+        type: cstr: "Conv2D",
+        filters: i32: 32,
+        kernel_size: i32: 3,
+        activation: cstr: "relu",
+        weight_file: cstr: "weights/conv1.bin"
       },
-
-      time: object: {
-        timestamp: i64: 1700000000,
-        delta_ms: i32: 0,
-        duration_ms: i32: 1500,
-        validated_at: i64: 1700001500
-      },
-
-      attributes: object: {
-        immutable: i32: 1,
-        valid: i32: 1,
-        confidence: float: 0.98,
-        usage_count: i32: 5,
-        trusted: i32: 1,
-        conflicted: i32: 0
-      },
-
-      classify: object: {
-        derived_from_index: i32: 0,
-        cross_refs: array: [],
-        forward_refs: array: [],
-        reasoning_depth: i32: 1,
-        classification_reason: cstr: "Trained on curated marine dataset",
-        tags: array: [cstr: "image-classification", cstr: "marine"],
-        similarity_score: float: 0.92,
-        is_hallucinated: i32: 0,
-        is_contradicted: i32: 0,
-        semantic_meta: object: {
-          embeddings_ref: cstr: "assets/embeddings/conv1.vec"
-        }
-      },
-
-      io: object: {
-        input: cstr: "raw_image.png",
-        output: cstr: "label: fish",
-        input_tokens: array: [],
-        output_tokens: array: [],
-        io_meta: object: {
-          parse_tree: null,
-          embedding_refs: array: [cstr: "assets/embeddings/conv1.vec"]
-        }
-      },
-
-      fson: object: {
-        root: object: {
-          extra_metrics: object: {
-            accuracy: float: 0.95,
-            loss: float: 0.12
-          }
-        }
-      },
-
-      audit_meta: object: {
-        reviewed_by: cstr: "AI_AUDITOR_01",
-        review_timestamp: i64: 1700001800
+      object: {
+        type: cstr: "Dense",
+        units: i32: 128,
+        activation: cstr: "relu",
+        weight_file: cstr: "weights/dense1.bin"
       }
-    }
-  ],
-
-  repo_meta: object: {
-    repo_id: cstr: "DEVICE123",
-    default_branch: cstr: "main",
-    created_at: i64: 1700000000,
-    updated_at: i64: 1700001800
+    ]
   }
 }
 ```
