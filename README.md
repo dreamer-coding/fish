@@ -1,105 +1,86 @@
-# 🐠 Fish Tool
-### A Command-Line AI Development Utility by **Fossil Logic**
+# 🐠 Fish Tool  
+### The Jellyfish AI Development & Training Utility by **Fossil Logic**
 
-Fish Tool is a modern, **all-in-one command-line toolkit** designed for developers, researchers, and AI practitioners. It streamlines the creation, training, management, and introspection of **Jellyfish AI modules** and datasets into a single, unified interface — combining traditional UNIX-style commands with **Jellyfish AI integration** for intelligent development workflows.
+**Fish Tool** is a specialized command-line utility dedicated to building, training, inspecting, and managing **Jellyfish AI modules and datasets**. It provides powerful model lifecycle commands, dataset workflows, auditing tools, and AI-assisted testing features.
 
----
-
-## 🚀 Features
-
-- 🧰 Full AI module lifecycle: create, train, export, import, delete, merge, prune  
-- 🧠 Integrated **Jellyfish AI** commands (`chat`, `ask`, `summary`, `reason`, `learn`, `reflect`, `seek`, `rebase`) for testing and inference  
-- 📚 Dataset management, sampling, and pruning  
-- 🔍 Module introspection: layers, weights, tokens, activations, and graph visualizations  
-- 🛡 Auditing tools for safety, bias, and performance evaluation  
-- 🧩 Cross-platform design (Linux, macOS, Windows)  
-- 💬 AI-augmented explanations and reporting for modules and datasets  
+Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 
 ---
 
-## 🧭 Command Palette
+# 🎛 Command Palette Overview
 
----
-
-### 🧠 AI Module Development
+## 🧬 AI Development Commands (Model Lifecycle)
 
 | **Command** | **Description** | **Common Flags** |
-|-------------|-----------------|-----------------|
-| `create` | Create a new AI module. | `-n, --name <id>` Module name<br>`--template <basic/rlhf/embedding/vision>` Module template<br>`--from <path>` Initialize from existing module<br>`--config <file>` FSON config |
-| `train` | Train an AI module (requires dataset). | `-m, --module <name>` Module to train<br>`-d, --dataset <name>` Dataset<br>`--resume <checkpoint>` Resume training<br>`--epochs <n>`, `--steps <n>`<br>`--lr <rate>` Learning rate<br>`--eval` Evaluate<br>`--save-every <n>` Checkpoint frequency |
-| `merge` | Merge modules into a new module. | `--modules <list>` Modules to merge<br>`--strategy <concat/average/overwrite>` Merge method |
-| `prune` | Prune parameters from a module. | `--module <name>` Module<br>`--threshold <value>` Pruning threshold<br>`--dry-run` No changes |
-| `decay` | Apply weight/learning rate decay. | `--module <name>` Module<br>`--rate <value>` Decay rate<br>`--steps <n>` Steps |
-| `rebase` | Reapply changes or retrain on a checkpoint. | `--module <name>` Module<br>`--checkpoint <id>` Base checkpoint<br>`--strategy <soft/hard>` Strategy |
-| `introspect` | Inspect module internals. | `--module <name>` Module<br>`--layers`<br>`--weights`<br>`--tokens`<br>`--graph`<br>`--params`<br>`--activations` |
-| `export` | Export a module or checkpoint. | `--module <name>` Module<br>`-f, --format <onnx/jelly/bin/fson/json>` Format<br>`--output <path>` Destination |
-| `import` | Import a module or checkpoint. | `--file <path>` Input file<br>`--type <module/checkpoint>` Asset type<br>`--name <id>` Assigned name |
-| `show` | List module-related assets. | `--modules` Modules<br>`--checkpoints` Checkpoints<br>`--config` Defaults<br>`--system` System info |
-| `delete` | Delete modules or checkpoints. | `--module <id>` Remove module<br>`--checkpoint <id>` Remove checkpoint<br>`-f, --force` Force removal |
-
-### 🫧 Dataset Management
-
-| **Command** | **Description** | **Common Flags** |
-|-------------|-----------------|-----------------|
-| `spawn` | Generate new datasets or synthetic data. | `-n, --name <dataset>` Dataset name<br>`--type <text/image/tabular/fson>` Dataset type<br>`--size <n>` Number of samples<br>`--template <name>` Schema template<br>`--seed <n>` Random seed<br>`--output <path>` Output path |
-| `weave` | Merge datasets into a new dataset. | `--datasets <list>` Dataset names<br>`--strategy <concat/dedupe/overlay>` Merge strategy |
-| `trim` | Remove samples from a dataset. | `--dataset <name>` Dataset<br>`--threshold <value>` Filter threshold<br>`--dry-run` Preview changes |
-| `peek` | Inspect dataset contents. | `--dataset <name>` Dataset<br>`--samples <n>` Number of samples to show |
-| `absorb` | Import a dataset into the system. | `--file <path>` Input file<br>`--type dataset` Asset type<br>`--name <id>` Assigned dataset name |
-| `shed` | Export a dataset to a file. | `--dataset <name>` Dataset<br>`--format <json/fson/csv/bin>` Format<br>`--output <path>` Destination file |
-| `catalog` | List available datasets. | `--datasets` Show all datasets |
-| `purge` | Permanently delete a dataset. | `--dataset <id>` Target dataset<br>`-f, --force` Skip confirmation |
+|-------------|-----------------|------------------|
+| `create` | Create a new AI module, dataset, profile, or training plan. | `-t, --type <module/dataset/profile>`<br>`-n, --name <id>`<br>`--config <file>`<br>`--template <id>` |
+| `delete` | Permanently remove modules, datasets, or checkpoints. | `-f, --force`<br>`-i, --interactive`<br>`--prune` Remove orphaned metadata |
+| `introspect` | Inspect internal structure of a model or dataset. | `--weights` Show tensor stats<br>`--layers` Architecture<br>`--tokens` Token stats<br>`--verify` Validate integrity |
+| `train` | Train or fine-tune a Jellyfish AI module using a dataset. | `-d, --dataset <path>`<br>`--epochs <n>`<br>`--batch <n>`<br>`--lr <rate>`<br>`--resume <checkpoint>`<br>`--save <path>` |
+| `audit` | Analyze model behavior for safety, bias, drift, or anomalies. | `--drift`<br>`--bias`<br>`--toxicity`<br>`--explain`<br>`--export <path>` |
+| `show` | Display information about modules, datasets, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
+| `view` | View raw dataset entries, tokens, or training samples. | `-n, --number <count>`<br>`--sample` Random selection<br>`--shuffle` |
+| `export` | Export a model, dataset, or training result. | `-f, --format <json/fson/bin/onnx/tensor>`<br>`--dest <path>` |
+| `import` | Import a dataset, module, or configuration. | `--validate`<br>`--name <id>`<br>`--replace` |
+| `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` |
+| `merge` | Merge datasets or modules. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
+| `rebase` | Apply a dataset or config change onto an existing model. | `--config <file>`<br>`--align` |
+| `prune` | Remove unused or low-value parameters, entries, or metadata. | `--small`<br>`--redundant`<br>`--orphans` |
+| `decay` | Apply weight decay or gradual forgetting to models. | `--strength <value>`<br>`--simulate` |
+| `seek` | AI-enhanced search across datasets or models. | `--query <text>`<br>`--semantic`<br>`--regex` |
 
 ---
 
-### 🤖 AI Commands (Jellyfish Integration)
+## 🧪 AI Testing Commands
 
 | **Command** | **Description** | **Common Flags** |
-|-------------|-----------------|-----------------|
-| `chat` | Start an interactive AI session with a module. | `-m, --module <name>` Module to chat with<br>`--system <file>` System role prompt<br>`--context` Keep session state<br>`--save <file>` Save chat transcript |
-| `ask` | Ask a module a one-shot question. | `-m, --module <name>` Target module<br>`--file <path>` Provide context<br>`--analyze` Deep analysis<br>`--explain` Explain output<br>`-q, --quiet` Minimal output |
-| `summary` | Generate a concise summary of a file, dataset, or module. | `--file <path>` File summary<br>`--dataset <name>` Dataset summary<br>`-m, --module <name>` Module summary<br>`--depth <level>` Detail level 1–10<br>`--color` Highlight key points<br>`-q, --quiet` Minimal output |
-| `reason` | Ask a module to provide reasoning or justification for outputs. | `-m, --module <name>` Module target<br>`--depth <n>` Reasoning depth<br>`--explain` Include detailed steps |
-| `learn` | Request a module to update its knowledge or adapt from input. | `-m, --module <name>` Module target<br>`--input <file>` Input data<br>`--incremental` Apply incremental learning |
-| `reflect` | Evaluate module performance or decisions over past data. | `-m, --module <name>` Module target<br>`--dataset <name>` Dataset for reflection<br>`--metrics <list>` Metrics to analyze |
-| `seek` | Search for relevant modules, datasets, or knowledge inside the AI ecosystem. | `--query <text>` Search query<br>`--type <module|dataset>` Filter type<br>`--limit <n>` Maximum results |
+|-------------|-----------------|------------------|
+| `ask` | Run a one-shot prompt against a module. | `-m, --model <id>`<br>`-f, --file <path>`<br>`--explain`<br>`--quiet` |
+| `chat` | Interactive conversation session with a local module. | `--context` Keep history<br>`--save <file>` Save transcript<br>`-m, --model <id>` |
+| `summary` | Summarize datasets, logs, files, or model states. | `-f, --file <path>`<br>`--depth <n>`<br>`--color`<br>`--time` |
 
 ---
 
-### 🌍 Global Flags (Available to All Commands)
+## 🧩 Dataset Subcommands (`fish dataset`)
+
+| **Subcommand** | **Description** | **Flags** |
+|----------------|-----------------|-----------|
+| `add` | Add new data samples (text, json, binary). | `--label <tag>`<br>`--source <id>` |
+| `remove` | Delete dataset items. | `--id <range>`<br>`--filter <expr>` |
+| `tag` | Apply internal tags to dataset entries. | `--add <tag>`<br>`--remove <tag>` |
+| `clean` | Sanitize dataset entries (dedupe, normalize). | `--dedupe`<br>`--normalize`<br>`--strip-html` |
+| `stats` | Show analytics and distribution stats. | `--tokens`<br>`--lengths`<br>`--labels` |
+| `split` | Train/test/validation splitting. | `--train <pct>`<br>`--test <pct>`<br>`--seed <n>` |
+| `verify` | Validate dataset structure and format. | `--strict` |
+
+---
+
+## 🌍 Global Flags (All Commands)
 
 | **Flag** | **Description** |
-|-----------|-----------------|
-| `--help` | Show command help. |
+|----------|-----------------|
+| `--help` | Show help for a command or subcommand. |
 | `--version` | Display Fish Tool version. |
-| `-v, --verbose` | Enable detailed output. |
-| `-q, --quiet` | Suppress standard output. |
-| `--dry-run` | Simulate actions without changes. |
-| `--color` | Colorize output where applicable. |
-| `--time` | Display timestamps in output. |
+| `-v, --verbose` | Enable detailed diagnostic output. |
+| `-q, --quiet` | Suppress normal output. |
+| `--color` | Enable colored output. |
+| `--dry-run` | Simulate actions without making changes. |
+| `--time` | Include timestamps in output. |
 
 ---
 
-### 🧩 Usage Examples
+# 🐟 Usage Examples
 
 | **Example** | **Description** |
 |-------------|-----------------|
-| `fish create --type module --name jelly-small --template basic` | Create a new AI module with a basic template. |
-| `fish train -m jelly-small -d corpus --epochs 3 --save-every 1000` | Train a module with dataset and periodic checkpointing. |
-| `fish introspect -m jelly-small --layers --params` | Inspect layer structure and parameter count. |
-| `fish audit -m jelly-small --perf --bias --explain` | Run performance, bias, and explanation audit. |
-| `fish merge -m module1,module2 --strategy average` | Merge two modules using average strategy. |
-| `fish prune -m jelly-small --threshold 0.01` | Prune weights below threshold. |
-| `fish decay -m jelly-small --rate 0.0005 --steps 1000` | Apply weight decay. |
-| `fish reason -m jelly-small --depth 3` | Ask module to explain reasoning. |
-| `fish learn -m jelly-small --input new_data.json --incremental` | Incrementally teach the module from a dataset. |
-| `fish reflect -m jelly-small --dataset test_set --metrics accuracy,loss` | Reflect on performance over past data. |
-| `fish seek --query "image embeddings" --type dataset` | Search for relevant datasets in the AI ecosystem. |
-| `fish rebase -m jelly-small --checkpoint base_v1 --strategy soft` | Reapply checkpoint with rebase strategy. |
-| `fish chat -m jelly-small "Explain this output"` | Start an interactive chat with the module. |
-| `fish export -m jelly-small --format onnx --output out/model.onnx` | Export module as ONNX file. |
-| `fish show --modules` | List all installed modules. |
-| `fish view --dataset news --samples 10` | Preview 10 samples from a dataset. |
+| `fish create -t module -n classifier --template base_small` | Create a new model using a template. |
+| `fish train -m classifier -d data/train --epochs 5 --save out/checkpoints` | Train a model with a dataset. |
+| `fish dataset clean --dedupe --normalize` | Clean and normalize dataset entries. |
+| `fish introspect classifier --layers --weights` | Inspect model architecture and weight statistics. |
+| `fish audit classifier --bias --toxicity --export audit.json` | Run a full audit and export results. |
+| `fish merge dataset_A dataset_B --strategy union` | Merge multiple datasets into one. |
+| `fish ask -m classifier "Explain this error code"` | Test a model with a one-shot question. |
+| `fish summary -f data.json --depth 3` | Summarize a dataset or file. |
 
 ## **Prerequisites**
 
