@@ -20,8 +20,9 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 | `audit` | Analyze model behavior for safety, bias, drift, or anomalies. | `--drift`<br>`--bias`<br>`--toxicity`<br>`--explain`<br>`--export <path>` |
 | `show` | Display information about modules, datasets, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
 | `view` | View raw dataset entries, tokens, or training samples. | `-n, --number <count>`<br>`--sample` Random selection<br>`--shuffle` |
-| `export`    | Export datasets or AI modules to various formats. | `-f, --file <path>` Output file path<br>`-t, --type <format>` Output format (`fson`, `json`, `yaml`, `toml`, `markdown`, `html`, `xml`, `csv`, `text`, `ini`)<br>`--pretty` Pretty-print output (if supported)<br>`--include-meta` Include semantic_meta and tags<br>`--overwrite` Overwrite existing file |
-| `import` | Import a dataset, module, or configuration. | `--validate`<br>`--name <id>`<br>`--replace` |
+| `export` | Export a model, dataset, or training result. Supports AI-centric formats for interoperability and deployment. | `-f, --format <fson/onnx/tensor>` Export format: `fson` (Fossil AI JSON), `onnx` (Open Neural Network Exchange), `tensor` (raw tensor weights)<br>`--dest <path>` Output file or directory<br>`--compress` Compress output<br>`--include-metadata` Include model/dataset metadata<br>`--overwrite` Overwrite existing files<br>`--quiet` Suppress output |
+| `import` | Import a model, dataset, or configuration from supported AI formats. | `-f, --format <fson/onnx/tensor>` Input format<br>`--source <path>` File or directory to import<br>`--validate` Validate structure and integrity<br>`--name <id>` Assign module/dataset name<br>`--replace` Overwrite existing entry if it exists<br>`--quiet` Suppress output |
+| `imagine` | Generate new content, modules, or data samples using Jellyfish AI. Ideal for prototyping, synthetic data creation, or creative outputs. | `-m, --model <id>` Select the model to use<br>`-p, --prompt <text>` Input prompt for generation<br>`--type` (`fson`, `json`, `yaml`, `toml`, `markdown`, `html`, `xml`, `csv`, `text`, `ini`) Output type<br>`--length <n>` Max output length<br>`--count <n>` Number of outputs to generate<br>`--seed <n>` Reproducible generation<br>`--save <path>` Save output to file<br>`--temperature <value>` Creativity/variation control |
 | `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` |
 | `merge` | Merge datasets or modules. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
 | `rebase` | Apply a dataset or config change onto an existing model. | `--config <file>`<br>`--align` |
@@ -80,7 +81,7 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 | `fish audit classifier --bias --toxicity --export audit.json` | Run a full audit and export results. |
 | `fish merge dataset_A dataset_B --strategy union` | Merge multiple datasets into one. |
 | `fish ask -m classifier "Explain this error code"` | Test a model with a one-shot question. |
-| `fish summary -f data.json --depth 3` | Summarize a dataset or file. |
+| `fish summary -f data.fson --depth 3` | Summarize a dataset or file. |
 
 ## **Prerequisites**
 
