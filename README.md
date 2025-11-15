@@ -85,6 +85,8 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 
 ## 🪼 Sample Jellyfish model
 
+This sample shows how Jellyfish AI uses FSON to package each reasoning step as a Git-like block containing identity, timing, classification, I/O data, and trust attributes. By storing all this in a typed, structured format, a .fish file captures not just a model, but its entire reasoning trail—making AI behavior transparent, auditable, and reproducible.
+
 ```fson
 {
   fson_version: cstr: "1.0",
