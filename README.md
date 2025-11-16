@@ -105,6 +105,75 @@ This sample shows how Jellyfish AI uses FSON to package each reasoning step as a
 }
 ```
 
+```fson
+{
+  history: array: [
+    object: {
+      timestamp: i64: 1700000000,
+      event: cstr: "Model initialized",
+      version: i32: 1,
+      description: cstr: "Created model.fson skeleton"
+    },
+    object: {
+      timestamp: i64: 1700000500,
+      event: cstr: "First chain added",
+      version: i32: 2,
+      description: cstr: "chains/chain_00001.fson included"
+    }
+  ]
+}
+```
+
+```fson
+{
+  chain: i32: 1,
+  commit_count: i32: 2,
+  commits: array: [
+    object: {
+      hash: cstr: "aa11bb22",
+      timestamp: i64: 1700000123,
+      input: object: {
+        text: cstr: "What is 2+2?",
+        tokens: array: [
+          cstr: "what",
+          cstr: "is",
+          cstr: "2+2"
+        ]
+      },
+      output: object: {
+        text: cstr: "4",
+        tokens: array: [
+          cstr: "4"
+        ]
+      },
+      confidence: f64: 0.95,
+      valid: bool: true
+    },
+
+    object: {
+      hash: cstr: "cc33dd44",
+      timestamp: i64: 1700000150,
+      input: object: {
+        text: cstr: "Capital of France?",
+        tokens: array: [
+          cstr: "capital",
+          cstr: "of",
+          cstr: "france"
+        ]
+      },
+      output: object: {
+        text: cstr: "Paris",
+        tokens: array: [
+          cstr: "paris"
+        ]
+      },
+      confidence: f64: 0.89,
+      valid: bool: true
+    }
+  ]
+}
+```
+
 ## **Prerequisites**
 
 Ensure you have the following installed before starting:
