@@ -14,7 +14,9 @@
 #ifndef FOSSIL_APP_COMMANDS_H
 #define FOSSIL_APP_COMMANDS_H
 
+#include <fossil/media/framework.h>
 #include <fossil/sys/framework.h>
+#include <fossil/ai/framework.h>
 #include <fossil/io/framework.h>
 
 #include <errno.h>
@@ -29,6 +31,8 @@
 #define MKDIR(path) mkdir(path, 0755)
 #define PATH_SEPARATOR "/"
 #endif
+
+#define MAX_PATH 1024
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,11 +52,10 @@ extern "C" {
  * @param template_id Optional template identifier to base creation on
  * @return 0 on success, non-zero error code on failure
  * 
- * Common flags: -t/--type <module/dataset/profile>, -n/--name <id>, 
+ * Common flags:  -n/--name <id>, 
  *               --config <file>, --template <id>
  */
-int fish_create(const char *type, const char *name,
-                const char *config, const char *template_id);
+int fish_create(const char *name, const char *config, const char *template_id);
 
 /**
  * Permanently removes AI models, datasets, or other components from the system.
