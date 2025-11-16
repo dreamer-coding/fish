@@ -3,12 +3,6 @@
 
 **Fish Tool** is a specialized command-line utility dedicated to building, training, inspecting, and managing **Jellyfish AI modules and datasets**. It provides powerful model lifecycle commands, dataset workflows, auditing tools, and AI-assisted testing features.  
 
-- **Chains** store committed knowledge (append-only).  
-- **Records** maintain a history of AI actions for auditing and replay.  
-- **Stats** track global metrics without scanning all chains.  
-
-This layout ensures **persistent AI memory**, auditability, and efficient dataset management while aligning with Fish Tool commands.
-
 ---
 
 # 🎛 Command Palette Overview
@@ -17,7 +11,7 @@ This layout ensures **persistent AI memory**, auditability, and efficient datase
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|------------------|
-| `create` | Create a new AI module, dataset, profile, or training plan. | `-t, --type <module/dataset/profile>`<br>`-n, --name <id>`<br>`--config <file>`<br>`--template <id>` |
+| `create` | Create a new AI module, dataset, profile, or training plan. | `-n, --name <id>`<br>`--config <file>`<br>`--template <id>` |
 | `delete` | Permanently remove modules, datasets, or checkpoints. | `-f, --force`<br>`-i, --interactive`<br>`--prune` Remove orphaned metadata |
 | `introspect` | Inspect internal structure of a model or dataset. | `--weights` Show tensor stats<br>`--layers` Architecture<br>`--tokens` Token stats<br>`--verify` Validate integrity |
 | `train` | Train or fine-tune a Jellyfish AI module using a dataset. | `-d, --dataset <path>`<br>`--epochs <n>`<br>`--batch <n>`<br>`--lr <rate>`<br>`--resume <checkpoint>`<br>`--save <path>` |
@@ -25,7 +19,7 @@ This layout ensures **persistent AI memory**, auditability, and efficient datase
 | `show` | Display information about modules, datasets, chains, records, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
 | `view` | View raw dataset entries, tokens, or training samples. | `-n, --number <count>`<br>`--sample` Random selection<br>`--shuffle` |
 | `export` | Export a model, dataset, or chain. Supports AI-centric formats for interoperability and deployment. | `-f, --format <fson/onnx/tensor>`<br>`--dest <path>`<br>`--compress`<br>`--include-metadata`<br>`--overwrite`<br>`--quiet` |
-| `import` | Import a model, dataset, or configuration from supported AI formats. | `-f, --format <fson/onnx/tensor>`<br>`--source <path>`<br>`--validate`<br>`--name <id>`<br>`--replace`<br>`--quiet` |
+| `import` | Import a model, dataset, or configuration from supported AI formats. | `--source <path>`<br>`--validate`<br>`--name <id>`<br>`--replace`<br>`--quiet` |
 | `imagine` | Generate new content, modules, or data samples using Jellyfish AI. | `-m, --model <id>`<br>`-p, --prompt <text>`<br>`--type <fson/json/yaml/etc>`<br>`--length <n>`<br>`--count <n>`<br>`--seed <n>`<br>`--save <path>`<br>`--temperature <value>` |
 | `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` |
 | `merge` | Merge datasets, models, or chains. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
