@@ -1,9 +1,13 @@
 # 🐠 Fish Tool  
 ### The Jellyfish AI Development & Training Utility by **Fossil Logic**
 
-**Fish Tool** is a specialized command-line utility dedicated to building, training, inspecting, and managing **Jellyfish AI modules and datasets**. It provides powerful model lifecycle commands, dataset workflows, auditing tools, and AI-assisted testing features.
+**Fish Tool** is a specialized command-line utility dedicated to building, training, inspecting, and managing **Jellyfish AI modules and datasets**. It provides powerful model lifecycle commands, dataset workflows, auditing tools, and AI-assisted testing features.  
 
-Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
+- **Chains** store committed knowledge (append-only).  
+- **Records** maintain a history of AI actions for auditing and replay.  
+- **Stats** track global metrics without scanning all chains.  
+
+This layout ensures **persistent AI memory**, auditability, and efficient dataset management while aligning with Fish Tool commands.
 
 ---
 
@@ -18,17 +22,17 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 | `introspect` | Inspect internal structure of a model or dataset. | `--weights` Show tensor stats<br>`--layers` Architecture<br>`--tokens` Token stats<br>`--verify` Validate integrity |
 | `train` | Train or fine-tune a Jellyfish AI module using a dataset. | `-d, --dataset <path>`<br>`--epochs <n>`<br>`--batch <n>`<br>`--lr <rate>`<br>`--resume <checkpoint>`<br>`--save <path>` |
 | `audit` | Analyze model behavior for safety, bias, drift, or anomalies. | `--drift`<br>`--bias`<br>`--toxicity`<br>`--explain`<br>`--export <path>` |
-| `show` | Display information about modules, datasets, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
+| `show` | Display information about modules, datasets, chains, records, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
 | `view` | View raw dataset entries, tokens, or training samples. | `-n, --number <count>`<br>`--sample` Random selection<br>`--shuffle` |
-| `export` | Export a model, dataset, or training result. Supports AI-centric formats for interoperability and deployment. | `-f, --format <fson/onnx/tensor>` Export format: `fson` (Fossil AI JSON), `onnx` (Open Neural Network Exchange), `tensor` (raw tensor weights)<br>`--dest <path>` Output file or directory<br>`--compress` Compress output<br>`--include-metadata` Include model/dataset metadata<br>`--overwrite` Overwrite existing files<br>`--quiet` Suppress output |
-| `import` | Import a model, dataset, or configuration from supported AI formats. | `-f, --format <fson/onnx/tensor>` Input format<br>`--source <path>` File or directory to import<br>`--validate` Validate structure and integrity<br>`--name <id>` Assign module/dataset name<br>`--replace` Overwrite existing entry if it exists<br>`--quiet` Suppress output |
-| `imagine` | Generate new content, modules, or data samples using Jellyfish AI. Ideal for prototyping, synthetic data creation, or creative outputs. | `-m, --model <id>` Select the model to use<br>`-p, --prompt <text>` Input prompt for generation<br>`--type` (`fson`, `json`, `yaml`, `toml`, `markdown`, `html`, `xml`, `csv`, `text`, `ini`) Output type<br>`--length <n>` Max output length<br>`--count <n>` Number of outputs to generate<br>`--seed <n>` Reproducible generation<br>`--save <path>` Save output to file<br>`--temperature <value>` Creativity/variation control |
+| `export` | Export a model, dataset, or chain. Supports AI-centric formats for interoperability and deployment. | `-f, --format <fson/onnx/tensor>`<br>`--dest <path>`<br>`--compress`<br>`--include-metadata`<br>`--overwrite`<br>`--quiet` |
+| `import` | Import a model, dataset, or configuration from supported AI formats. | `-f, --format <fson/onnx/tensor>`<br>`--source <path>`<br>`--validate`<br>`--name <id>`<br>`--replace`<br>`--quiet` |
+| `imagine` | Generate new content, modules, or data samples using Jellyfish AI. | `-m, --model <id>`<br>`-p, --prompt <text>`<br>`--type <fson/json/yaml/etc>`<br>`--length <n>`<br>`--count <n>`<br>`--seed <n>`<br>`--save <path>`<br>`--temperature <value>` |
 | `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` |
-| `merge` | Merge datasets or modules. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
-| `rebase` | Apply a dataset or config change onto an existing model. | `--config <file>`<br>`--align` |
+| `merge` | Merge datasets, models, or chains. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
+| `rebase` | Apply a dataset or config change onto an existing model or chain. | `--config <file>`<br>`--align` |
 | `prune` | Remove unused or low-value parameters, entries, or metadata. | `--small`<br>`--redundant`<br>`--orphans` |
-| `decay` | Apply weight decay or gradual forgetting to models. | `--strength <value>`<br>`--simulate` |
-| `seek` | AI-enhanced search across datasets or models. | `--query <text>`<br>`--semantic`<br>`--regex` |
+| `decay` | Apply weight decay or gradual forgetting to models or chains. | `--strength <value>`<br>`--simulate` |
+| `seek` | AI-enhanced search across datasets, chains, or models. | `--query <text>`<br>`--semantic`<br>`--regex` |
 
 ---
 
@@ -36,9 +40,9 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|------------------|
-| `ask` | Run a one-shot prompt against a module. | `-m, --model <id>`<br>`-f, --file <path>`<br>`--explain`<br>`--quiet` |
+| `ask` | Run a one-shot prompt against a module or chain. | `-m, --model <id>`<br>`-f, --file <path>`<br>`--explain`<br>`--quiet` |
 | `chat` | Interactive conversation session with a local module. | `--context` Keep history<br>`--save <file>` Save transcript<br>`-m, --model <id>` |
-| `summary` | Summarize datasets, logs, files, or model states. | `-f, --file <path>`<br>`--depth <n>`<br>`--color`<br>`--time` |
+| `summary` | Summarize datasets, chains, logs, or model states. | `-f, --file <path>`<br>`--depth <n>`<br>`--color`<br>`--time` |
 
 ---
 
@@ -83,90 +87,29 @@ Where **Shark** manages the filesystem, **Fish** manages the *intelligence*.
 | `fish ask -m classifier "Explain this error code"` | Test a model with a one-shot question. |
 | `fish summary -f data.fson --depth 3` | Summarize a dataset or file. |
 
-## 🪼 Sample Jellyfish model
+### 🔗 How it works
 
-This sample shows how Jellyfish AI uses FSON to package each reasoning step as a Git-like block containing identity, timing, classification, I/O data, and trust attributes. By storing all this in a typed, structured format, a .fish file captures not just a model, but its entire reasoning trail—making AI behavior transparent, auditable, and reproducible.
+- **model.fson**
+  - Contains `version`, `model_type`, `chains` (array of paths), and `records` reference.
+  - Acts as the central pointer for the model.
 
-```fson
-{
-  version: i32: 1,
-  model_type: cstr: "jellyfish",
-  chains: array: [
-    cstr: "chains/chain_00001.fson",
-    cstr: "chains/chain_00002.fson"
-  ],
-  records: cstr: "records.fson"
-}
-```
+- **chains/**  
+  - Stores individual learning chains.
+  - Each chain is append-only and contains committed knowledge learned by the AI.
+  
+- **records.fson**  
+  - Logs changes, updates, and training events.
+  - Time-aware, allowing the AI to "remember" historical actions.
 
-```fson
-{
-  history: array: [
-    object: {
-      timestamp: i64: 1700000000,
-      event: cstr: "Model initialized",
-      version: i32: 1,
-      description: cstr: "Created model.fson skeleton"
-    },
-    object: {
-      timestamp: i64: 1700000500,
-      event: cstr: "First chain added",
-      version: i32: 2,
-      description: cstr: "chains/chain_00001.fson included"
-    }
-  ]
-}
-```
+- **stats.fson**  
+  - Tracks global statistics like `commit_count`, `token_count`, `chain_count`.
+  - Avoids the need to scan all chains for quick metrics.
 
-```fson
-{
-  chain: i32: 1,
-  commit_count: i32: 2,
-  commits: array: [
-    object: {
-      hash: cstr: "aa11bb22",
-      timestamp: i64: 1700000123,
-      input: object: {
-        text: cstr: "What is 2+2?",
-        tokens: array: [
-          cstr: "what",
-          cstr: "is",
-          cstr: "2+2"
-        ]
-      },
-      output: object: {
-        text: cstr: "4",
-        tokens: array: [
-          cstr: "4"
-        ]
-      },
-      confidence: f64: 0.95,
-      valid: bool: true
-    },
+### 💡 Notes
 
-    object: {
-      hash: cstr: "cc33dd44",
-      timestamp: i64: 1700000150,
-      input: object: {
-        text: cstr: "Capital of France?",
-        tokens: array: [
-          cstr: "capital",
-          cstr: "of",
-          cstr: "france"
-        ]
-      },
-      output: object: {
-        text: cstr: "Paris",
-        tokens: array: [
-          cstr: "paris"
-        ]
-      },
-      confidence: f64: 0.89,
-      valid: bool: true
-    }
-  ]
-}
-```
+- This structure enables **persistent AI memory** while keeping chains modular.
+- Chains can be individually inspected, exported, or pruned without touching the main model.
+- Records ensure auditability and rollback capability.
 
 ## **Prerequisites**
 
