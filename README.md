@@ -91,17 +91,11 @@ This sample shows how Jellyfish AI uses FSON to package each reasoning step as a
 {
   version: i32: 1,
   model_type: cstr: "jellyfish",
-  last_chain: i32: 0,
   chains: array: [
     cstr: "chains/chain_00001.fson",
     cstr: "chains/chain_00002.fson"
   ],
-  records: cstr: "records.fson",
-  stats: object: {
-    commit_count: i32: 0,
-    token_count: i32: 0,
-    chain_count: i32: 2
-  }
+  records: cstr: "records.fson"
 }
 ```
 
