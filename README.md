@@ -89,37 +89,18 @@ This sample shows how Jellyfish AI uses FSON to package each reasoning step as a
 
 ```fson
 {
-  fson_version: cstr: "1.0",
-
-  model: object: {
-    name: cstr: "AquaNet",
-    version: cstr: "1.0",
-    model_type: cstr: "CNN",
-
-    metadata_file: cstr: "meta.fson",
-
-    chain_files: array: [
-      cstr: "chains/chain_0001.fson",
-      cstr: "chains/chain_0002.fson"
-    ]
-  },
-
-  architecture: object: {
-    layers: array: [
-      object: {
-        type: cstr: "Conv2D",
-        filters: i32: 32,
-        kernel_size: i32: 3,
-        activation: cstr: "relu",
-        weight_file: cstr: "weights/conv1.bin"
-      },
-      object: {
-        type: cstr: "Dense",
-        units: i32: 128,
-        activation: cstr: "relu",
-        weight_file: cstr: "weights/dense1.bin"
-      }
-    ]
+  version: i32: 1,
+  model_type: cstr: "jellyfish",
+  last_chain: i32: 0,
+  chains: array: [
+    cstr: "chains/chain_00001.fson",
+    cstr: "chains/chain_00002.fson"
+  ],
+  records: cstr: "records.fson",
+  stats: object: {
+    commit_count: i32: 0,
+    token_count: i32: 0,
+    chain_count: i32: 2
   }
 }
 ```
