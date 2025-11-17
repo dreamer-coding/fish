@@ -11,20 +11,16 @@
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|------------------|
-| `create` | Create a new AI module, dataset, profile, or training plan. | `-n, --name <id>` |
-| `delete` | Permanently remove modules, datasets, or checkpoints. | `-f, --force`<br>`-i, --interactive`<br>`--prune` Remove orphaned metadata |
-| `introspect` | Inspect internal structure of a model or dataset. | `--weights` Show tensor stats<br>`--layers` Architecture<br>`--tokens` Token stats<br>`--verify` Validate integrity |
-| `train` | Train or fine-tune a Jellyfish AI module using a dataset. | `-d, --dataset <path>`<br>`--epochs <n>`<br>`--batch <n>`<br>`--lr <rate>`<br>`--resume <checkpoint>`<br>`--save <path>` |
-| `audit` | Analyze model behavior for safety, bias, drift, or anomalies. | `--drift`<br>`--bias`<br>`--toxicity`<br>`--explain`<br>`--export <path>` |
-| `show` | Display information about modules, datasets, chains, records, or metadata. | `-a, --all`<br>`--stats`<br>`--meta`<br>`--tags` |
-| `view` | View raw dataset entries, tokens, or training samples. | `-n, --number <count>`<br>`--sample` Random selection<br>`--shuffle` |
-| `imagine` | Generate new content, modules, or data samples using Jellyfish AI. | `-m, --model <id>`<br>`-p, --prompt <text>`<br>`--type <fson/json/yaml/etc>`<br>`--length <n>`<br>`--count <n>`<br>`--seed <n>`<br>`--save <path>`<br>`--temperature <value>` |
-| `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` |
-| `merge` | Merge datasets, models, or chains. | `-s, --strategy <union/overwrite/append>`<br>`--dry-run` |
-| `rebase` | Apply a dataset or config change onto an existing model or chain. | `--config <file>`<br>`--align` |
-| `prune` | Remove unused or low-value parameters, entries, or metadata. | `--small`<br>`--redundant`<br>`--orphans` |
-| `decay` | Apply weight decay or gradual forgetting to models or chains. | `--strength <value>`<br>`--simulate` |
-| `seek` | AI-enhanced search across datasets, chains, or models. | `--query <text>`<br>`--semantic`<br>`--regex` |
+| `create` | Create a new AI module. | `-n, --name <id>` Name of the AI module |
+| `delete` | Remove modules, or checkpoints. | `-f, --force` (force deletion)<br>`-i, --interactive` (prompt before delete) |
+| `introspect` | Inspect internal structure of a model or dataset. | `--crossref` (check cross references)<br>`--core` (show core module info)<br>`--chains` (inspect memory chains) |
+| `train` | Train or fine-tune a AI module. | `--epochs <n>` (number of epochs)<br>`--batch <n>` (batch size)<br>`--lr <rate>` (learning rate)<br>`--resume <checkpoint>` (resume from checkpoint)<br>`--save <path>` (save output path) |
+| `audit` | Analyze model behavior for safety, bias, drift, or anomalies. | `--drift` (check for drift)<br>`--bias` (check for bias)<br>`--toxic` (check for toxicity)<br>`--woke` (check for woke signals)<br>`--explain` (explain findings)<br>`--export <path>` (export results) |
+| `imagine` | Generate new content, modules, or data samples. | `-m, --model <id>` (model to use)<br>`-p, --prompt <text>` (prompt text)<br>`--type <fson/json/yaml/etc>` (output type)<br>`--length <n>` (output length)<br>`--count <n>` (number of samples)<br>`--seed <n>` (random seed)<br>`--save <path>` (save output)<br>`--temperature <value>` (sampling temperature) |
+| `dataset` | Dataset-focused operations (subcommands). | `add`, `remove`, `tag`, `clean`, `stats`, `split`, `verify` (see Dataset Subcommands below) |
+| `prune` | Remove unused or low-value parameters, entries, or metadata. | `--small` (remove small params)<br>`--redundant` (remove redundant items)<br>`--orphans` (remove orphaned entries) |
+| `decay` | Apply weight decay or gradual forgetting to models or chains. | `--strength <value>` (decay strength)<br>`--simulate` (simulate decay) |
+| `seek` | AI-enhanced search across datasets, chains, or models. | `--query <text>` (search query)<br>`--semantic` (semantic search) |
 
 ---
 
