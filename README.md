@@ -23,13 +23,14 @@ Fish is a unified CLI tool to **develop, train, analyze, and deploy Jellyfish AI
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|-----------------|
-| `create` | Initialize a new Jellyfish AI model. | `-n, --name <name>` Model name<br>`--type <type>` Model architecture<br> |
+| `create` | Initialize a new Jellyfish AI model. | `-n, --name <name>` Model name<br>`--type <type>` Model architecture |
 | `train` | Train a model on a dataset. | `-d, --dataset <path>` Dataset to train on<br>`--epochs <n>` Number of epochs<br>`--batch <n>` Batch size<br>`--lr <rate>` Learning rate |
 | `test` | Evaluate model performance. | `-d, --dataset <path>` Test dataset<br>`--metrics <list>` Metrics to report<br>`--save <file>` Save report |
 | `inspect` | Inspect model parameters, weights, or configuration. | `--weights` Show weights<br>`--summary` Architecture summary<br>`--layer <name>` Specific layer info |
 | `save` | Save current model state. | `--file <path>` Target file<br>`--format <f>` Format: fson, json, bin |
 | `load` | Load an existing model. | `--file <path>` Source file<br>`--override` Replace current session |
-| `dataset` | Manage datasets for model training and evaluation. | `import`, `clean`, `preprocess`, `augment`, `export`, `stats`, `split` subcommands<br>See Dataset section below for flags |
+| `delete` | Delete a model by name. | `-n, --name <name>` Model name<br>`--force` Force deletion without confirmation |
+| `dataset` | Manage datasets for model training and evaluation. | `import`, `clean`, `preprocess`, `augment`, `export`, `stats`, `split`, `delete` subcommands<br>See Dataset section below for flags |
 
 ---
 
@@ -44,6 +45,7 @@ Fish is a unified CLI tool to **develop, train, analyze, and deploy Jellyfish AI
 | `dataset export` | Export dataset to file or format. | `--file <path>` Target file<br>`--format <f>` Format: csv, fson, json |
 | `dataset stats` | Show dataset statistics. | `--summary` High-level stats<br>`--columns <list>` Specific columns<br>`--plot` Generate plots |
 | `dataset split` | Split dataset for training/testing/validation. | `--train <%>` Train fraction<br>`--val <%>` Validation fraction<br>`--test <%>` Test fraction |
+| `dataset delete` | Delete a dataset by name. | `-n, --name <name>` Dataset name<br>`--force` Force deletion without confirmation |
 
 ---
 
