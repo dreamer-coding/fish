@@ -23,7 +23,7 @@ Fish is a unified CLI tool to **develop, train, analyze, and deploy Jellyfish AI
 
 | **Command** | **Description** | **Common Flags** |
 |-------------|-----------------|-----------------|
-| `create` | Initialize a new Jellyfish AI model. | `-n, --name <name>` Model name<br>`--type <type>` Model architecture |
+| `create` | Initialize a new Jellyfish AI model. | `-n, --name <name>` Model name |
 | `train` | Train a model on a dataset. | `-d, --dataset <path>` Dataset to train on<br>`--epochs <n>` Number of epochs<br>`--batch <n>` Batch size<br>`--lr <rate>` Learning rate |
 | `test` | Evaluate model performance. | `-d, --dataset <path>` Test dataset<br>`--metrics <list>` Metrics to report<br>`--save <file>` Save report |
 | `inspect` | Inspect model parameters, weights, or configuration. | `--weights` Show weights<br>`--summary` Architecture summary<br>`--layer <name>` Specific layer info |
