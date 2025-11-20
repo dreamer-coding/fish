@@ -13,7 +13,26 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
+/**
+ * @brief Generate initial commit hash
+ */
+static void generate_initial_commit(fossil_ai_jellyfish_block_t *block) {
+    memset(block, 0, sizeof(*block));
+    block->commit_index = 0;
+
+    // Simple deterministic hash for first commit
+    for (size_t i = 0; i < FOSSIL_JELLYFISH_HASH_SIZE; ++i) {
+        block->commit_hash[i] = (uint8_t)i;
+    }
+}
+
+/**
+ * @brief Create a new Jellyfish AI model (chain) and save it to disk.
+ * 
+ * @param name Model name (used for file naming).
+ * @return int Status code.
+ */
+int fish_create(const char *name) {
     if (!name) return -1;
 
     fossil_ai_jellyfish_chain_t chain;
@@ -30,6 +49,10 @@ int fish_create(const char *name, const char *type) {
 
     // Repo ID placeholder
     for (size_t i = 0; i < FOSSIL_DEVICE_ID_SIZE; i++) chain.repo_id[i] = (uint8_t)i;
+
+    // Generate first commit
+    generate_initial_commit(&chain.commits[0]);
+    chain.count = 1; // One commit exists
 
     // Generate output filename
     char filepath[512];
@@ -57,8 +80,8 @@ int fish_create(const char *name, const char *type) {
     memcpy(hdr.magic, "JFCHAIN", 7);
     hdr.version = 1;
     hdr.commit_capacity = FOSSIL_JELLYFISH_MAX_MEM;
-    hdr.commit_count = 0;
-    hdr.valid_count = 0;
+    hdr.commit_count = chain.count;
+    hdr.valid_count = chain.count;
     hdr.branch_count = chain.branch_count;
     hdr.created_at = chain.created_at;
     hdr.updated_at = chain.updated_at;
@@ -70,7 +93,7 @@ int fish_create(const char *name, const char *type) {
         return -1;
     }
 
-    // Write empty branch record
+    // Write branch record
     struct {
         char name[64];
         uint8_t head_hash[FOSSIL_JELLYFISH_HASH_SIZE];
@@ -78,14 +101,20 @@ int fish_create(const char *name, const char *type) {
 
     memset(&br, 0, sizeof(br));
     strncpy(br.name, chain.default_branch, sizeof(br.name) - 1);
-    memset(br.head_hash, 0, sizeof(br.head_hash));
+    memcpy(br.head_hash, chain.commits[0].commit_hash, FOSSIL_JELLYFISH_HASH_SIZE);
     if (fwrite(&br, 1, sizeof(br), fp) != sizeof(br)) {
+        fclose(fp);
+        return -1;
+    }
+
+    // Write first commit record
+    if (fwrite(&chain.commits[0], 1, sizeof(chain.commits[0]), fp) != sizeof(chain.commits[0])) {
         fclose(fp);
         return -1;
     }
 
     fclose(fp);
 
-    printf("Created new Jellyfish AI model: %s (type: %s)\n", name, type ? type : "default");
+    printf("Created new Jellyfish AI model: %s\n", name);
     return 0;
 }
