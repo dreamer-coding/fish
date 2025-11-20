@@ -13,7 +13,8 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_summary(const char *file_path, int depth, int time_flag) {
+    printf("fish_summary: file=%s, depth=%d, time_flag=%d\n",
+           file_path, depth, time_flag);
     return 0;
 }

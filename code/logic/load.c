@@ -13,7 +13,7 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_load(const char *file_path, int override_session) {
+    printf("fish_load: file=%s, override=%d\n", file_path, override_session);
     return 0;
 }

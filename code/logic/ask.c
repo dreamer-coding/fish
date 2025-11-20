@@ -13,7 +13,9 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_ask(const char *model_name, const char *prompt,
+             const char *file_path, int explain) {
+    printf("fish_ask: model=%s, prompt=%s, file=%s, explain=%d\n",
+           model_name, prompt, file_path ? file_path : "NONE", explain);
     return 0;
 }

@@ -35,297 +35,188 @@ extern "C" {
 #endif
 
 /**
- * 🧬 AI Development Commands (Model Lifecycle)
- *
- * These commands manage the lifecycle of AI modules, including creation,
- * deletion, inspection, training, auditing, content generation, pruning,
- * decay, and search. Each function corresponds to a CLI command and
- * supports various flags for customization.
+ * @brief Create a new AI model.
+ * 
+ * @param name Name of the model.
+ * @param type Type of the model.
+ * @return int Status code (0 for success, non-zero for error).
  */
+int fish_create(const char *name, const char *type);
 
 /**
- * Create a new AI module.
- * @param name Name of the AI module to create.
- * @return Status code (0 for success, non-zero for error).
- * Flags:
- *   -n, --name <id> : Name of the AI module to create.
+ * @brief Delete a model.
+ * 
+ * @param model_name Name of the model to delete.
+ * @param force Flag to force deletion without confirmation (1: yes, 0: no).
+ * @return int Status code.
  */
-int fish_create(const char *name);
+int fish_delete_model(const char *model_name, int force);
 
 /**
- * Remove modules or checkpoints.
- * @param target Target module or checkpoint to delete.
- * @param force Force deletion without confirmation.
- * @param interactive Prompt before deleting.
- * @return Status code.
- * Flags:
- *   -f, --force      : Force deletion without confirmation.
- *   -i, --interactive: Prompt before deleting.
- */
-int fish_delete(const char *target, bool force, bool interactive);
-
-/**
- * Inspect internal structure of a model or dataset.
- * @param target Target model or dataset to inspect.
- * @param crossref Check cross references.
- * @param core Show core module info.
- * @param chains Inspect memory chains.
- * @return Status code.
- * Flags:
- *   --crossref : Check cross references.
- *   --core     : Show core module info.
- *   --chains   : Inspect memory chains.
- */
-int fish_introspect(const char *target, bool crossref, bool core, bool chains);
-
-/**
- * Train or fine-tune an AI module.
- * @param module Module to train.
+ * @brief Train an AI model with a dataset.
+ * 
+ * @param model_name Name of the model to train.
+ * @param dataset_path Path to the training dataset.
  * @param epochs Number of training epochs.
- * @param batch Batch size.
+ * @param batch_size Size of each training batch.
  * @param lr Learning rate.
- * @param resume_ckpt Resume from checkpoint.
- * @param save_path Save output path.
- * @return Status code.
- * Flags:
- *   --epochs <n>      : Number of training epochs.
- *   --batch <n>       : Batch size.
- *   --lr <rate>       : Learning rate.
- *   --resume <ckpt>   : Resume from checkpoint.
- *   --save <path>     : Save output path.
+ * @return int Status code.
  */
-int fish_train(const char *module, int epochs, int batch, float lr,
-               const char *resume_ckpt, const char *save_path);
+int fish_train(const char *model_name, const char *dataset_path,
+               int epochs, int batch_size, float lr);
 
 /**
- * Analyze model behavior for safety, bias, drift, or anomalies.
- * @param module Module to audit.
- * @param drift Check for drift.
- * @param bias Check for bias.
- * @param toxic Check for toxicity.
- * @param woke Check for woke signals.
- * @param explain Explain findings.
- * @param export_path Export results path.
- * @return Status code.
- * Flags:
- *   --drift    : Check for drift.
- *   --bias     : Check for bias.
- *   --toxic    : Check for toxicity.
- *   --woke     : Check for woke signals.
- *   --explain  : Explain findings.
- *   --export <path> : Export results.
+ * @brief Test an AI model using a dataset and metrics.
+ * 
+ * @param model_name Name of the model to test.
+ * @param dataset_path Path to the test dataset.
+ * @param metrics_list Comma-separated list of metrics.
+ * @param save_file File to save test results.
+ * @return int Status code.
  */
-int fish_audit(const char *module, bool drift, bool bias, bool toxic, bool woke,
-               bool explain, const char *export_path);
+int fish_test(const char *model_name, const char *dataset_path,
+              const char *metrics_list, const char *save_file);
 
 /**
- * Generate new content, modules, or data samples.
- * @param model Model to use.
- * @param prompt Prompt text.
- * @param type Output type (fson/json/yaml/etc).
- * @param length Output length.
- * @param count Number of samples.
- * @param seed Random seed.
- * @param save_path Save output path.
- * @param temperature Sampling temperature.
- * @return Status code.
- * Flags:
- *   -m, --model <id>      : Model to use.
- *   -p, --prompt <text>   : Prompt text.
- *   --type <format>       : Output type (fson/json/yaml/etc).
- *   --length <n>          : Output length.
- *   --count <n>           : Number of samples.
- *   --seed <n>            : Random seed.
- *   --save <path>         : Save output path.
- *   --temperature <value> : Sampling temperature.
+ * @brief Inspect an AI model's details.
+ * 
+ * @param model_name Name of the model.
+ * @param show_weights Flag to show weights (1: show, 0: hide).
+ * @param summary Flag to show summary (1: show, 0: hide).
+ * @param layer_name Specific layer to inspect (NULL for all).
+ * @return int Status code.
  */
-int fish_imagine(const char *model, const char *prompt, const char *type,
-                 int length, int count, int seed, const char *save_path,
-                 float temperature);
+int fish_inspect(const char *model_name, int show_weights,
+                 int summary, const char *layer_name);
 
 /**
- * Remove unused or low-value parameters, entries, or metadata.
- * @param module Module to prune.
- * @param small Remove small parameters.
- * @param redundant Remove redundant items.
- * @param orphans Remove orphaned entries.
- * @return Status code.
- * Flags:
- *   --small     : Remove small parameters.
- *   --redundant : Remove redundant items.
- *   --orphans   : Remove orphaned entries.
+ * @brief Save an AI model to a file.
+ * 
+ * @param model_name Name of the model.
+ * @param file_path Path to save the model.
+ * @param format File format (e.g., "bin", "json").
+ * @return int Status code.
  */
-int fish_prune(const char *module, bool small, bool redundant, bool orphans);
+int fish_save(const char *model_name, const char *file_path,
+              const char *format);
 
 /**
- * Apply weight decay or gradual forgetting to models or chains.
- * @param module Module to decay.
- * @param strength Decay strength.
- * @param simulate Simulate decay only.
- * @return Status code.
- * Flags:
- *   --strength <value> : Decay strength.
- *   --simulate         : Simulate decay only.
+ * @brief Load an AI model from a file.
+ * 
+ * @param file_path Path to the model file.
+ * @param override_session Flag to override current session (1: yes, 0: no).
+ * @return int Status code.
  */
-int fish_decay(const char *module, float strength, bool simulate);
+int fish_load(const char *file_path, int override_session);
 
 /**
- * AI-enhanced search across datasets, chains, or models.
- * @param query Search query.
- * @param semantic Enable semantic search.
- * @return Status code.
- * Flags:
- *   --query <text> : Search query.
- *   --semantic     : Enable semantic search.
+ * @brief Import a dataset from a file.
+ * 
+ * @param file_path Path to the dataset file.
+ * @param format File format (e.g., "csv", "json").
+ * @return int Status code.
  */
-int fish_seek(const char *query, bool semantic);
-
+int fish_dataset_import(const char *file_path, const char *format);
 
 /**
- * 🧪 AI Testing Commands
- *
- * These commands are used for testing and interacting with AI modules,
- * including running prompts, interactive chat, and summarization.
+ * @brief Delete a dataset.
+ * 
+ * @param dataset_name Name of the dataset to delete.
+ * @param force Flag to force deletion without confirmation (1: yes, 0: no).
+ * @return int Status code.
  */
+int fish_delete_dataset(const char *dataset_name, int force);
 
 /**
- * Run a one-shot prompt against a module or chain.
- * @param model Model to use.
- * @param file Input file.
- * @param explain Explain output.
- * @param quiet Suppress output.
- * @return Status code.
- * Flags:
- *   -m, --model <id> : Model to use.
- *   -f, --file <path>: Input file.
- *   --explain        : Explain output.
- *   --quiet          : Suppress output.
+ * @brief Clean the dataset (drop nulls, deduplicate, normalize).
+ * 
+ * @param drop_null Drop null values (1: yes, 0: no).
+ * @param dedup Deduplicate entries (1: yes, 0: no).
+ * @param normalize Normalize data (1: yes, 0: no).
+ * @return int Status code.
  */
-int fish_ask(const char *model, const char *file, bool explain, bool quiet);
+int fish_dataset_clean(int drop_null, int dedup, int normalize);
 
 /**
- * Interactive conversation session with a local module.
- * @param model Model to use.
- * @param keep_context Keep conversation history.
- * @param save_file Save transcript to file.
- * @return Status code.
- * Flags:
- *   --context     : Keep conversation history.
- *   --save <file> : Save transcript to file.
- *   -m, --model <id> : Model to use.
+ * @brief Preprocess the dataset (tokenize, scale, encode).
+ * 
+ * @param tokenize Tokenize data (1: yes, 0: no).
+ * @param scale Scale data (1: yes, 0: no).
+ * @param encode Encode data (1: yes, 0: no).
+ * @return int Status code.
  */
-int fish_chat(const char *model, bool keep_context, const char *save_file);
+int fish_dataset_preprocess(int tokenize, int scale, int encode);
 
 /**
- * Summarize datasets, chains, logs, or model states.
- * @param file Input file.
+ * @brief Augment the dataset.
+ * 
+ * @param type Type of augmentation.
+ * @param factor Augmentation factor.
+ * @return int Status code.
+ */
+int fish_dataset_augment(const char *type, int factor);
+
+/**
+ * @brief Export the dataset to a file.
+ * 
+ * @param file_path Path to export file.
+ * @param format Export format.
+ * @return int Status code.
+ */
+int fish_dataset_export(const char *file_path, const char *format);
+
+/**
+ * @brief Get statistics for the dataset.
+ * 
+ * @param summary Show summary (1: yes, 0: no).
+ * @param columns Columns to include (comma-separated).
+ * @param plot Plot statistics (1: yes, 0: no).
+ * @return int Status code.
+ */
+int fish_dataset_stats(int summary, const char *columns, int plot);
+
+/**
+ * @brief Split the dataset into train, validation, and test sets.
+ * 
+ * @param train_frac Fraction for training set.
+ * @param val_frac Fraction for validation set.
+ * @param test_frac Fraction for test set.
+ * @return int Status code.
+ */
+int fish_dataset_split(float train_frac, float val_frac, float test_frac);
+
+/**
+ * @brief Ask a model a question using a prompt.
+ * 
+ * @param model_name Name of the model.
+ * @param prompt Prompt string.
+ * @param file_path Optional file path for input/output.
+ * @param explain Flag to explain answer (1: yes, 0: no).
+ * @return int Status code.
+ */
+int fish_ask(const char *model_name, const char *prompt,
+             const char *file_path, int explain);
+
+/**
+ * @brief Start a chat session with a model.
+ * 
+ * @param model_name Name of the model.
+ * @param keep_context Keep chat context (1: yes, 0: no).
+ * @param save_file File to save chat history.
+ * @return int Status code.
+ */
+int fish_chat(const char *model_name, int keep_context, const char *save_file);
+
+/**
+ * @brief Summarize a file using a model.
+ * 
+ * @param file_path Path to the file.
  * @param depth Summary depth.
- * @param color Color output.
- * @param time Include timing info.
- * @return Status code.
- * Flags:
- *   -f, --file <path>: Input file.
- *   --depth <n>      : Summary depth.
- *   --color          : Color output.
- *   --time           : Include timing info.
+ * @param time_flag Include timing info (1: yes, 0: no).
+ * @return int Status code.
  */
-int fish_summary(const char *file, int depth, bool color, bool time);
+int fish_summary(const char *file_path, int depth, int time_flag);
 
-
-/**
- * 🧩 Dataset Subcommands (fish dataset)
- *
- * These subcommands operate on datasets for adding, removing, tagging,
- * cleaning, statistics, splitting, and verification.
- */
-
-/**
- * Add new data samples (text, json, binary).
- * @param dataset Dataset to add to.
- * @param source Source identifier.
- * @param label Label for the data.
- * @return Status code.
- * Flags:
- *   --label <tag>   : Label for the data.
- *   --source <id>   : Source identifier.
- */
-int fish_dataset_add(const char *dataset, const char *source, const char *label);
-
-/**
- * Delete dataset items.
- * @param dataset Dataset to remove from.
- * @param id_range Range of IDs to remove.
- * @param filter Filter expression.
- * @return Status code.
- * Flags:
- *   --id <range>    : Range of IDs to remove.
- *   --filter <expr> : Filter expression.
- */
-int fish_dataset_remove(const char *dataset, const char *id_range, const char *filter);
-
-/**
- * Apply internal tags to dataset entries.
- * @param dataset Dataset to tag.
- * @param add_tag Tag to add.
- * @param remove_tag Tag to remove.
- * @return Status code.
- * Flags:
- *   --add <tag>     : Tag to add.
- *   --remove <tag>  : Tag to remove.
- */
-int fish_dataset_tag(const char *dataset, const char *add_tag, const char *remove_tag);
-
-/**
- * Sanitize dataset entries (dedupe, normalize).
- * @param dataset Dataset to clean.
- * @param dedupe Remove duplicates.
- * @param normalize Normalize entries.
- * @param strip_html Strip HTML tags.
- * @return Status code.
- * Flags:
- *   --dedupe        : Remove duplicates.
- *   --normalize     : Normalize entries.
- *   --strip-html    : Strip HTML tags.
- */
-int fish_dataset_clean(const char *dataset, bool dedupe, bool normalize, bool strip_html);
-
-/**
- * Show analytics and distribution stats.
- * @param dataset Dataset to analyze.
- * @param tokens Show token statistics.
- * @param lengths Show length statistics.
- * @param labels Show label statistics.
- * @return Status code.
- * Flags:
- *   --tokens        : Show token statistics.
- *   --lengths       : Show length statistics.
- *   --labels        : Show label statistics.
- */
-int fish_dataset_stats(const char *dataset, bool tokens, bool lengths, bool labels);
-
-/**
- * Train/test/validation splitting.
- * @param dataset Dataset to split.
- * @param train_pct Training set percentage.
- * @param test_pct Test set percentage.
- * @param seed Random seed.
- * @return Status code.
- * Flags:
- *   --train <pct>   : Training set percentage.
- *   --test <pct>    : Test set percentage.
- *   --seed <n>      : Random seed.
- */
-int fish_dataset_split(const char *dataset, int train_pct, int test_pct, int seed);
-
-/**
- * Validate dataset structure and format.
- * @param dataset Dataset to validate.
- * @param strict Enable strict validation.
- * @return Status code.
- * Flags:
- *   --strict        : Enable strict validation.
- */
-int fish_dataset_verify(const char *dataset, bool strict);
 
 #ifdef __cplusplus
 }

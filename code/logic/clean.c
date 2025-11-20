@@ -13,7 +13,9 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_dataset_clean(int drop_null, int dedup, int normalize) {
+    printf("fish_dataset_clean: drop_null=%d, dedup=%d, normalize=%d\n",
+           drop_null, dedup, normalize);
     return 0;
 }
+

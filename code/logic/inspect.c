@@ -13,7 +13,9 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_inspect(const char *model_name, int show_weights,
+                 int summary, const char *layer_name) {
+    printf("fish_inspect: model=%s, show_weights=%d, summary=%d, layer=%s\n",
+           model_name, show_weights, summary, layer_name ? layer_name : "ALL");
     return 0;
 }

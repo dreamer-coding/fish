@@ -13,7 +13,9 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_train(const char *model_name, const char *dataset_path,
+               int epochs, int batch_size, float lr) {
+    printf("fish_train: model=%s, dataset=%s, epochs=%d, batch=%d, lr=%f\n",
+           model_name, dataset_path, epochs, batch_size, lr);
     return 0;
 }

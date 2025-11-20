@@ -13,7 +13,8 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_dataset_preprocess(int tokenize, int scale, int encode) {
+    printf("fish_dataset_preprocess: tokenize=%d, scale=%d, encode=%d\n",
+           tokenize, scale, encode);
     return 0;
 }

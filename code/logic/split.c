@@ -13,7 +13,8 @@
  */
 #include "fossil/code/commands.h"
 
-int fish_create(const char *name, const char *type) {
-    printf("fish_create: name=%s, type=%s\n", name, type);
+int fish_dataset_split(float train_frac, float val_frac, float test_frac) {
+    printf("fish_dataset_split: train=%.2f, val=%.2f, test=%.2f\n",
+           train_frac, val_frac, test_frac);
     return 0;
 }
