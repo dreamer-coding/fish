@@ -38,10 +38,9 @@ extern "C" {
  * @brief Create a new AI model.
  * 
  * @param name Name of the model.
- * @param type Type of the model.
  * @return int Status code (0 for success, non-zero for error).
  */
-int fish_create(const char *name, const char *type);
+int fish_create(const char *name);
 
 /**
  * @brief Delete a model.
