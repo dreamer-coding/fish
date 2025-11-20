@@ -26,28 +26,6 @@ static void generate_commit_hash(fossil_ai_jellyfish_block_t *prev, fossil_ai_je
 }
 
 /**
- * @brief Load a chain from disk (simplified for this prototype)
- */
-int fossil_ai_jellyfish_load(fossil_ai_jellyfish_chain_t *chain, const char *filepath) {
-    FILE *fp = fopen(filepath, "rb");
-    if (!fp) return -1;
-    if (fread(chain, 1, sizeof(*chain), fp) != sizeof(*chain)) { fclose(fp); return -1; }
-    fclose(fp);
-    return 0;
-}
-
-/**
- * @brief Save a chain to disk (simplified for this prototype)
- */
-int fossil_ai_jellyfish_save(fossil_ai_jellyfish_chain_t *chain, const char *filepath) {
-    FILE *fp = fopen(filepath, "wb");
-    if (!fp) return -1;
-    if (fwrite(chain, 1, sizeof(*chain), fp) != sizeof(*chain)) { fclose(fp); return -1; }
-    fclose(fp);
-    return 0;
-}
-
-/**
  * @brief Train a Jellyfish AI model by appending a new commit
  * 
  * @param model_name Model file name (without extension)
