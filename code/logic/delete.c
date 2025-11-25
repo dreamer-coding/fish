@@ -79,12 +79,53 @@ int fish_delete_model(const char *model_name, int force)
 
 /**
  * @brief Delete a dataset.
- * 
- * @param dataset_name Name of the dataset to delete.
- * @param force Flag to force deletion without confirmation (1: yes, 0: no).
- * @return int Status code.
+ *
+ * Datasets are stored under "datasets/<name>" as raw files.
+ * This function removes the dataset file after optional confirmation.
  */
-int fish_delete_dataset(const char *dataset_name, int force) {
-    printf("fish_delete_dataset: dataset=%s, force=%d\n", dataset_name, force);
+int fish_delete_dataset(const char *dataset_name, int force)
+{
+    if (!dataset_name) {
+        printf("fish_delete_dataset: invalid dataset name.\n");
+        return -1;
+    }
+
+    /* Construct dataset path */
+    char path[512];
+    snprintf(path, sizeof(path), "datasets/%s", dataset_name);
+
+    /* Check if file exists */
+    FILE *fp = fopen(path, "rb");
+    if (!fp) {
+        printf("fish_delete_dataset: dataset '%s' not found.\n",
+               dataset_name);
+        return -1;
+    }
+    fclose(fp);
+
+    /* If not forced, ask (via console) */
+    if (!force) {
+        printf("Delete dataset '%s'? [y/N]: ", dataset_name);
+        fflush(stdout);
+
+        char response[8] = {0};
+        if (!fgets(response, sizeof(response), stdin)) {
+            printf("fish_delete_dataset: cancelled.\n");
+            return -1;
+        }
+
+        if (response[0] != 'y' && response[0] != 'Y') {
+            printf("fish_delete_dataset: cancelled.\n");
+            return -1;
+        }
+    }
+
+    /* Delete file */
+    if (remove(path) != 0) {
+        printf("fish_delete_dataset: failed to remove '%s'.\n", path);
+        return -1;
+    }
+
+    printf("fish_delete_dataset: removed '%s'.\n", path);
     return 0;
 }
