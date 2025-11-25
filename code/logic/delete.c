@@ -13,15 +13,67 @@
  */
 #include "fossil/code/commands.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 /**
  * @brief Delete a model.
- * 
- * @param model_name Name of the model to delete.
- * @param force Flag to force deletion without confirmation (1: yes, 0: no).
- * @return int Status code.
+ *
+ * A Jellyfish AI model is represented by "<model_name>.jfchain".
+ * This function removes that file after confirming with the user
+ * unless force = 1.
  */
-int fish_delete_model(const char *model_name, int force) {
-    printf("fish_delete_model: model=%s, force=%d\n", model_name, force);
+int fish_delete_model(const char *model_name, int force)
+{
+    if (!model_name || model_name[0] == '\0') {
+        printf("fish_delete_model: missing model name.\n");
+        return -1;
+    }
+
+    char path[512];
+    snprintf(path, sizeof(path), "%s.jfchain", model_name);
+
+    // Check file existence first
+    FILE *fp = fopen(path, "rb");
+    if (!fp) {
+        printf("fish_delete_model: model not found: %s\n", path);
+        return -1;
+    }
+    fclose(fp);
+
+    // Ask for confirmation if not forced
+    if (!force) {
+        printf("Are you sure you want to delete model '%s'? [y/N]: ", model_name);
+        fflush(stdout);
+
+        char answer = getchar();
+        if (answer != 'y' && answer != 'Y') {
+            printf("Deletion cancelled.\n");
+            return 1;
+        }
+    }
+
+    // Securely overwrite the file first (simple but effective)
+    fp = fopen(path, "rb+");
+    if (fp) {
+        fseek(fp, 0, SEEK_END);
+        long size = ftell(fp);
+        rewind(fp);
+
+        for (long i = 0; i < size; i++)
+            fputc(0x00, fp);
+
+        fclose(fp);
+    }
+
+    // Now remove it
+    if (remove(path) != 0) {
+        printf("fish_delete_model: failed to delete file: %s\n", path);
+        return -1;
+    }
+
+    printf("Model '%s' has been deleted.\n", model_name);
     return 0;
 }
 
