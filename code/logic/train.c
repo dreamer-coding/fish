@@ -14,19 +14,7 @@
 #include "fossil/code/commands.h"
 
 /**
- * @brief Simple helper to generate a new commit hash based on previous commit
- */
-static void generate_commit_hash(fossil_ai_jellyfish_block_t *prev, fossil_ai_jellyfish_block_t *new_commit) {
-    memset(new_commit, 0, sizeof(*new_commit));
-    new_commit->commit_index = prev->commit_index + 1;
-
-    for (size_t i = 0; i < FOSSIL_JELLYFISH_HASH_SIZE; ++i) {
-        new_commit->commit_hash[i] = prev->commit_hash[i] + (uint8_t)(new_commit->commit_index);
-    }
-}
-
-/**
- * @brief Train a Jellyfish AI model by appending a new commit
+ * @brief Train a Jellyfish AI model by appending a new commit using proper hash
  * 
  * @param model_name Model file name (without extension)
  * @param dataset_path Path to dataset (not used yet)
@@ -45,26 +33,32 @@ int fish_train(const char *model_name, const char *dataset_path,
 
     fossil_ai_jellyfish_chain_t chain;
     if (fossil_ai_jellyfish_load(&chain, filepath) != 0) {
-        printf("Failed to load model: %s\n", filepath);
+        fossil_io_printf("{red,bold}Failed to load model: %s{normal}\n", filepath);
         return -1;
     }
 
     if (chain.count >= FOSSIL_JELLYFISH_MAX_MEM) {
-        printf("Chain is full, cannot add new commit.\n");
+        fossil_io_printf("{yellow,bold}Chain is full, cannot add new commit.{normal}\n");
         return -1;
     }
 
-    // Simulate training by adding a new commit
-    generate_commit_hash(&chain.commits[chain.count - 1], &chain.commits[chain.count]);
-    chain.count++;
+    // Simulate training by adding a new commit using the learn API
+    char input[128], output[128];
+    snprintf(input, sizeof(input), "epoch:%d batch:%d lr:%.4f", epochs, batch_size, lr);
+    snprintf(output, sizeof(output), "trained on %s", dataset_path ? dataset_path : "N/A");
+    fossil_ai_jellyfish_learn(&chain, input, output);
+
     chain.updated_at = (uint64_t)time(NULL);
 
     if (fossil_ai_jellyfish_save(&chain, filepath) != 0) {
-        printf("Failed to save model after training.\n");
+        fossil_io_printf("{red,bold}Failed to save model after training.{normal}\n");
         return -1;
     }
 
-    printf("Trained model '%s' on dataset '%s' (%d epochs, batch %d, lr %.4f)\n",
-           model_name, dataset_path ? dataset_path : "N/A", epochs, batch_size, lr);
+    fossil_io_printf(
+        "{green,bold}Trained model '{cyan}%s{green}' on dataset '{magenta}%s{green}' "
+        "(%d epochs, batch %d, lr %.4f){normal}\n",
+        model_name, dataset_path ? dataset_path : "N/A", epochs, batch_size, lr
+    );
     return 0;
 }

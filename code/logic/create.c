@@ -14,19 +14,6 @@
 #include "fossil/code/commands.h"
 
 /**
- * @brief Generate initial commit hash
- */
-static void generate_initial_commit(fossil_ai_jellyfish_block_t *block) {
-    memset(block, 0, sizeof(*block));
-    block->commit_index = 0;
-
-    // Simple deterministic hash for first commit
-    for (size_t i = 0; i < FOSSIL_JELLYFISH_HASH_SIZE; ++i) {
-        block->commit_hash[i] = (uint8_t)i;
-    }
-}
-
-/**
  * @brief Create a new Jellyfish AI model (chain) and save it to disk.
  * 
  * @param name Model name (used for file naming).
@@ -36,7 +23,7 @@ int fish_create(const char *name) {
     if (!name) return -1;
 
     fossil_ai_jellyfish_chain_t chain;
-    memset(&chain, 0, sizeof(chain));
+    fossil_ai_jellyfish_init(&chain);
 
     // Timestamps
     uint64_t now = (uint64_t)time(NULL);
@@ -50,17 +37,23 @@ int fish_create(const char *name) {
     // Repo ID placeholder
     for (size_t i = 0; i < FOSSIL_DEVICE_ID_SIZE; i++) chain.repo_id[i] = (uint8_t)i;
 
-    // Generate first commit
-    generate_initial_commit(&chain.commits[0]);
+    // Generate first commit hash using the provided hash function
+    fossil_ai_jellyfish_hash("init", "init", chain.commits[0].hash);
+    chain.commits[0].index = 0;
+    memcpy(chain.commits[0].data, &now, sizeof(now)); // Store timestamp in data
+
     chain.count = 1; // One commit exists
 
     // Generate output filename
     char filepath[512];
     snprintf(filepath, sizeof(filepath), "%s.jfchain", name);
 
-    // Open file
-    FILE *fp = fopen(filepath, "wb");
-    if (!fp) return -1;
+    fossil_io_file_t file_stream;
+    memset(&file_stream, 0, sizeof(file_stream));
+    if (fossil_io_file_open(&file_stream, filepath, "wb") != 0) {
+        fossil_io_printf("{red,bold}Error:{normal} Could not create file: %s\n", filepath);
+        return -1;
+    }
 
     // Write header
     struct {
@@ -88,8 +81,9 @@ int fish_create(const char *name) {
     memcpy(hdr.repo_id, chain.repo_id, FOSSIL_DEVICE_ID_SIZE);
     strncpy(hdr.default_branch, chain.default_branch, sizeof(hdr.default_branch) - 1);
 
-    if (fwrite(&hdr, 1, sizeof(hdr), fp) != sizeof(hdr)) {
-        fclose(fp);
+    if (fossil_io_file_write(&file_stream, &hdr, 1, sizeof(hdr)) != sizeof(hdr)) {
+        fossil_io_printf("{red,bold}Error:{normal} Failed to write header to file: %s\n", filepath);
+        fossil_io_file_close(&file_stream);
         return -1;
     }
 
@@ -101,20 +95,22 @@ int fish_create(const char *name) {
 
     memset(&br, 0, sizeof(br));
     strncpy(br.name, chain.default_branch, sizeof(br.name) - 1);
-    memcpy(br.head_hash, chain.commits[0].commit_hash, FOSSIL_JELLYFISH_HASH_SIZE);
-    if (fwrite(&br, 1, sizeof(br), fp) != sizeof(br)) {
-        fclose(fp);
+    memcpy(br.head_hash, chain.commits[0].hash, FOSSIL_JELLYFISH_HASH_SIZE);
+    if (fossil_io_file_write(&file_stream, &br, 1, sizeof(br)) != sizeof(br)) {
+        fossil_io_printf("{red,bold}Error:{normal} Failed to write branch record to file: %s\n", filepath);
+        fossil_io_file_close(&file_stream);
         return -1;
     }
 
     // Write first commit record
-    if (fwrite(&chain.commits[0], 1, sizeof(chain.commits[0]), fp) != sizeof(chain.commits[0])) {
-        fclose(fp);
+    if (fossil_io_file_write(&file_stream, &chain.commits[0], 1, sizeof(chain.commits[0])) != sizeof(chain.commits[0])) {
+        fossil_io_printf("{red,bold}Error:{normal} Failed to write commit record to file: %s\n", filepath);
+        fossil_io_file_close(&file_stream);
         return -1;
     }
 
-    fclose(fp);
+    fossil_io_file_close(&file_stream);
 
-    printf("Created new Jellyfish AI model: %s\n", name);
+    fossil_io_printf("{green,bold}Created new Jellyfish AI model:{normal} %s\n", name);
     return 0;
 }
