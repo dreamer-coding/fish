@@ -17,66 +17,100 @@
  * @brief Export the dataset to a file.
  * 
  * @param file_path Path to export file.
- * @param format Export format: "csv", "json", "fson".
+ * @param format Export format: "csv", "json", "fson", "jelly".
  * @return int Status code.
  */
-int fish_dataset_export(const char *file_path, const char *format)
+int fish_dataset_export(ccstring file_path, ccstring format)
 {
     if (!file_path || !format) {
-        printf("fish_dataset_export: invalid parameters.\n");
+        fossil_io_printf("{red,bold}fish_dataset_export: invalid parameters.{normal}\n", "");
         return -1;
     }
 
-    const char *src_path = "datasets/current.dataset";
-    FILE *src = fopen(src_path, "r");
-    if (!src) {
-        printf("fish_dataset_export: no active dataset found.\n");
+    ccstring src_path = "datasets/current.dataset";
+    fossil_io_file_t src_stream = {0};
+    fossil_io_file_t dst_stream = {0};
+
+    if (fossil_io_file_open(&src_stream, src_path, "r") != 0) {
+        fossil_io_printf("{red,bold}fish_dataset_export: no active dataset found.{normal}\n", "");
         return -1;
     }
 
-    FILE *dst = fopen(file_path, "w+b");
-    if (!dst) {
-        fclose(src);
-        printf("fish_dataset_export: cannot open output file.\n");
+    if (fossil_io_file_open(&dst_stream, file_path, "w+b") != 0) {
+        fossil_io_file_close(&src_stream);
+        fossil_io_printf("{red,bold}fish_dataset_export: cannot open output file.{normal}\n", "");
         return -1;
     }
 
-    char buf[4096];
+    fossil_sys_memory_t buf = fossil_sys_memory_alloc(4096);
 
-    if (strcmp(format, "csv") == 0) {
+    if (fossil_io_cstring_iequals(format, "csv")) {
         // simple copy for CSV
-        while (fgets(buf, sizeof(buf), src)) {
-            fputs(buf, dst);
+        while (fgets((char *)buf, 4096, src_stream.file)) {
+            fossil_io_file_write(&dst_stream, buf, 1, strlen((char *)buf));
         }
     }
-    else if (strcmp(format, "json") == 0) {
-        fprintf(dst, "[\n");
+    else if (fossil_io_cstring_iequals(format, "json")) {
+        fossil_io_file_write(&dst_stream, "[\n", 1, 2);
         int first = 1;
-        while (fgets(buf, sizeof(buf), src)) {
-            if (!first) fprintf(dst, ",\n");
+        while (fgets((char *)buf, 4096, src_stream.file)) {
+            if (!first) fossil_io_file_write(&dst_stream, ",\n", 1, 2);
             first = 0;
-            buf[strcspn(buf, "\r\n")] = 0; // strip newline
-            fprintf(dst, "  [\"%s\"]", buf); // simple JSON array per row
+            ((char *)buf)[strcspn((char *)buf, "\r\n")] = 0; // strip newline
+            cstring escaped = fossil_io_cstring_escape_json((char *)buf);
+            if (escaped) {
+                fossil_sys_memory_t line = fossil_sys_memory_alloc(4096);
+                snprintf((char *)line, 4096, "  [\"%s\"]", escaped);
+                fossil_io_file_write(&dst_stream, line, 1, strlen((char *)line));
+                fossil_sys_memory_free(line);
+                fossil_io_cstring_free(escaped);
+            } else {
+                fossil_io_file_write(&dst_stream, "  [\"\"]", 1, 7);
+            }
         }
-        fprintf(dst, "\n]\n");
+        fossil_io_file_write(&dst_stream, "\n]\n", 1, 3);
     }
-    else if (strcmp(format, "fson") == 0) {
+    else if (fossil_io_cstring_iequals(format, "fson")) {
         // minimal binary dump: length-prefixed lines
-        while (fgets(buf, sizeof(buf), src)) {
-            size_t len = strcspn(buf, "\r\n");
-            if (fwrite(&len, sizeof(size_t), 1, dst) != 1) break;
-            if (fwrite(buf, 1, len, dst) != len) break;
+        while (fgets((char *)buf, 4096, src_stream.file)) {
+            size_t len = strcspn((char *)buf, "\r\n");
+            fossil_io_file_write(&dst_stream, &len, sizeof(size_t), 1);
+            fossil_io_file_write(&dst_stream, buf, 1, len);
         }
+    }
+    else if (fossil_io_cstring_iequals(format, "jelly")) {
+        // Export using jellyfish chain serialization
+        fossil_ai_jellyfish_chain_t chain;
+        fossil_ai_jellyfish_init(&chain);
+        // Load dataset lines as input/output pairs into chain
+        while (fgets((char *)buf, 4096, src_stream.file)) {
+            ((char *)buf)[strcspn((char *)buf, "\r\n")] = 0; // strip newline
+            // For demo: treat line as both input and output
+            fossil_ai_jellyfish_learn(&chain, (char *)buf, (char *)buf);
+        }
+        int rc = fossil_ai_jellyfish_save(&chain, file_path);
+        fossil_ai_jellyfish_cleanup(&chain);
+        fossil_io_file_close(&src_stream);
+        fossil_io_file_close(&dst_stream);
+        fossil_sys_memory_free(buf);
+        if (rc != 0) {
+            fossil_io_printf("{red,bold}fish_dataset_export: jellyfish export failed.{normal}\n", "");
+            return -1;
+        }
+        fossil_io_printf("{green,bold}fish_dataset_export: dataset exported to '%s' as jellyfish chain.{normal}\n", file_path, "");
+        return 0;
     }
     else {
-        fclose(src);
-        fclose(dst);
-        printf("fish_dataset_export: unsupported format '%s'.\n", format);
+        fossil_io_file_close(&src_stream);
+        fossil_io_file_close(&dst_stream);
+        fossil_sys_memory_free(buf);
+        fossil_io_printf("{yellow,bold}fish_dataset_export: unsupported format '%s'.{normal}\n", format, "");
         return -1;
     }
 
-    fclose(src);
-    fclose(dst);
-    printf("fish_dataset_export: dataset exported to '%s' as %s.\n", file_path, format);
+    fossil_io_file_close(&src_stream);
+    fossil_io_file_close(&dst_stream);
+    fossil_sys_memory_free(buf);
+    fossil_io_printf("{green,bold}fish_dataset_export: dataset exported to '%s' as %s.{normal}\n", file_path, format);
     return 0;
 }

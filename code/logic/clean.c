@@ -13,15 +13,6 @@
  */
 #include "fossil/code/commands.h"
 
-/* ----------- simple hash for deduplication ----------- */
-static unsigned long str_hash(const char *s) {
-    unsigned long h = 5381;
-    int c;
-    while ((c = *s++))
-        h = ((h << 5) + h) + c;
-    return h;
-}
-
 #define MAX_LINES 200000
 #define MAX_LINE_LEN 4096
 
@@ -40,76 +31,75 @@ static unsigned long str_hash(const char *s) {
 int fish_dataset_clean(int drop_null, int dedup, int normalize)
 {
     const char *path = "datasets/current.dataset";
+    fossil_io_file_t file_stream;
 
-    FILE *fp = fopen(path, "r");
-    if (!fp) {
-        printf("fish_dataset_clean: no active dataset found.\n");
+    if (fossil_io_file_open(&file_stream, path, "r") != 0 || !file_stream.file) {
+        fossil_io_printf("{red,bold}fish_dataset_clean: no active dataset found.{normal}\n");
         return -1;
     }
 
     /* storage */
-    char **rows = malloc(sizeof(char*) * MAX_LINES);
+    cstring *rows = (cstring *)fossil_sys_memory_alloc(sizeof(cstring) * MAX_LINES);
     if (!rows) {
-        fclose(fp);
+        fossil_io_file_close(&file_stream);
+        fossil_io_printf("{red,bold}fish_dataset_clean: memory allocation failed.{normal}\n");
         return -1;
     }
     size_t count = 0;
 
     /* ---------- Load rows ---------- */
     char buf[MAX_LINE_LEN];
-    while (fgets(buf, sizeof(buf), fp)) {
+    while (fgets(buf, sizeof(buf), file_stream.file)) {
         if (count >= MAX_LINES) break;
-        rows[count] = strdup(buf);
+        rows[count] = fossil_io_cstring_create(buf);
         count++;
     }
-    fclose(fp);
+    fossil_io_file_close(&file_stream);
 
     /* ---------- Drop null rows ---------- */
     if (drop_null) {
         size_t w = 0;
         for (size_t i = 0; i < count; i++) {
-            int allspace = 1;
-            for (char *p = rows[i]; *p; p++) {
-                if (!isspace((unsigned char)*p)) {
-                    allspace = 0;
-                    break;
-                }
-            }
-            if (!allspace)
+            fossil_io_cstring_trim(rows[i]);
+            if (fossil_io_cstring_length(rows[i]) > 0)
                 rows[w++] = rows[i];
             else
-                free(rows[i]);
+                fossil_io_cstring_free(rows[i]);
         }
         count = w;
-        printf("fish_dataset_clean: dropped null rows.\n");
+        fossil_io_printf("{green}fish_dataset_clean: dropped null rows.{normal}\n");
     }
 
     /* ---------- Deduplicate ---------- */
     if (dedup) {
-        unsigned long *seen = calloc(count, sizeof(unsigned long));
+        // Use jellyfish hash for deduplication
+        uint8_t *seen_hashes = (uint8_t *)fossil_sys_memory_calloc(count, FOSSIL_JELLYFISH_HASH_SIZE);
         size_t seen_count = 0;
 
         size_t w = 0;
         for (size_t i = 0; i < count; i++) {
-            unsigned long h = str_hash(rows[i]);
+            uint8_t hash[FOSSIL_JELLYFISH_HASH_SIZE];
+            fossil_ai_jellyfish_hash(rows[i], NULL, hash);
+
             int exists = 0;
             for (size_t s = 0; s < seen_count; s++) {
-                if (seen[s] == h) {
+                if (fossil_sys_memory_compare(seen_hashes + s * FOSSIL_JELLYFISH_HASH_SIZE, hash, FOSSIL_JELLYFISH_HASH_SIZE) == 0) {
                     exists = 1;
                     break;
                 }
             }
             if (!exists) {
-                seen[seen_count++] = h;
+                fossil_sys_memory_copy(seen_hashes + seen_count * FOSSIL_JELLYFISH_HASH_SIZE, hash, FOSSIL_JELLYFISH_HASH_SIZE);
+                seen_count++;
                 rows[w++] = rows[i];
             } else {
-                free(rows[i]);
+                fossil_io_cstring_free(rows[i]);
             }
         }
         count = w;
-        free(seen);
+        fossil_sys_memory_free(seen_hashes);
 
-        printf("fish_dataset_clean: removed duplicates.\n");
+        fossil_io_printf("{yellow}fish_dataset_clean: removed duplicates.{normal}\n");
     }
 
     /* ---------- Normalize numeric columns ---------- */
@@ -119,11 +109,11 @@ int fish_dataset_clean(int drop_null, int dedup, int normalize)
         for (char *p = rows[0]; *p; p++)
             if (*p == ',') cols++;
 
-        double *minv = malloc(sizeof(double) * cols);
-        double *maxv = malloc(sizeof(double) * cols);
+        double *minv = (double *)fossil_sys_memory_alloc(sizeof(double) * cols);
+        double *maxv = (double *)fossil_sys_memory_alloc(sizeof(double) * cols);
         if (!minv || !maxv) {
-            printf("fish_dataset_clean: normalize failed (alloc).\n");
-            free(minv); free(maxv);
+            fossil_io_printf("{red,bold}fish_dataset_clean: normalize failed (alloc).{normal}\n");
+            fossil_sys_memory_free(minv); fossil_sys_memory_free(maxv);
             return -1;
         }
 
@@ -135,8 +125,9 @@ int fish_dataset_clean(int drop_null, int dedup, int normalize)
 
         /* scan numeric ranges */
         for (size_t i = 0; i < count; i++) {
-            char *row = strdup(rows[i]);
-            char *tok = strtok(row, ",");
+            cstring row = fossil_io_cstring_copy(rows[i]);
+            cstring saveptr = NULL;
+            cstring tok = fossil_io_cstring_token(row, ",", &saveptr);
             size_t c = 0;
             while (tok && c < cols) {
                 char *end;
@@ -145,19 +136,18 @@ int fish_dataset_clean(int drop_null, int dedup, int normalize)
                     if (v < minv[c]) minv[c] = v;
                     if (v > maxv[c]) maxv[c] = v;
                 }
-                tok = strtok(NULL, ",");
+                tok = fossil_io_cstring_token(NULL, ",", &saveptr);
                 c++;
             }
-            free(row);
+            fossil_io_cstring_free(row);
         }
 
         /* apply normalization */
         for (size_t i = 0; i < count; i++) {
-            char out[MAX_LINE_LEN];
-            out[0] = '\0';
-
-            char *row = strdup(rows[i]);
-            char *tok = strtok(row, ",");
+            cstring out = fossil_io_cstring_create("");
+            cstring row = fossil_io_cstring_copy(rows[i]);
+            cstring saveptr = NULL;
+            cstring tok = fossil_io_cstring_token(row, ",", &saveptr);
             size_t c = 0;
 
             while (tok && c < cols) {
@@ -166,44 +156,43 @@ int fish_dataset_clean(int drop_null, int dedup, int normalize)
                 if (end != tok && maxv[c] > minv[c]) {
                     /* numeric -> normalize */
                     double scaled = (v - minv[c]) / (maxv[c] - minv[c]);
-                    char num[64];
-                    snprintf(num, sizeof(num), "%.6f", scaled);
-                    strcat(out, num);
+                    cstring num = fossil_io_cstring_format("%.6f", scaled);
+                    fossil_io_cstring_append(&out, num);
+                    fossil_io_cstring_free(num);
                 } else {
-                    /* non-numeric */
-                    strcat(out, tok);
+                    fossil_io_cstring_append(&out, tok);
                 }
-                if (c + 1 < cols) strcat(out, ",");
-                tok = strtok(NULL, ",");
+                if (c + 1 < cols)
+                    fossil_io_cstring_append(&out, ",");
+                tok = fossil_io_cstring_token(NULL, ",", &saveptr);
                 c++;
             }
 
-            free(rows[i]);
-            rows[i] = strdup(out);
-            free(row);
+            fossil_io_cstring_free(rows[i]);
+            rows[i] = out;
+            fossil_io_cstring_free(row);
         }
 
-        free(minv);
-        free(maxv);
+        fossil_sys_memory_free(minv);
+        fossil_sys_memory_free(maxv);
 
-        printf("fish_dataset_clean: normalized numeric values.\n");
+        fossil_io_printf("{cyan}fish_dataset_clean: normalized numeric values.{normal}\n");
     }
 
     /* ---------- Write output back ---------- */
-    fp = fopen(path, "w");
-    if (!fp) {
-        printf("fish_dataset_clean: failed to rewrite dataset.\n");
+    if (fossil_io_file_open(&file_stream, path, "w") != 0 || !file_stream.file) {
+        fossil_io_printf("{red,bold}fish_dataset_clean: failed to rewrite dataset.{normal}\n");
         return -1;
     }
 
     for (size_t i = 0; i < count; i++) {
-        fputs(rows[i], fp);
-        free(rows[i]);
+        fossil_io_fputs(file_stream.file, rows[i]);
+        fossil_io_cstring_free(rows[i]);
     }
-    fclose(fp);
+    fossil_io_file_close(&file_stream);
 
-    free(rows);
+    fossil_sys_memory_free(rows);
 
-    printf("fish_dataset_clean: completed successfully.\n");
+    fossil_io_printf("{green,bold}fish_dataset_clean: completed successfully.{normal}\n");
     return 0;
 }

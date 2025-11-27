@@ -16,84 +16,55 @@
 /* --------------------------------------------------------------
  * Internal mock backend call.
  * In the real system, this would call Jellyfish AI or Shark AI.
- * For now it generates a deterministic pseudo-answer.
+ * For now it generates a deterministic pseudo-answer using Jellyfish chain.
  * -------------------------------------------------------------- */
-static void backend_generate_reply(const char *model,
-                                   const char *prompt,
+static void backend_generate_reply(ccstring model,
+                                   ccstring prompt,
                                    int explain,
-                                   char *out, size_t out_sz)
+                                   cstring out, size_t out_sz)
 {
-    snprintf(out, out_sz,
+    fossil_ai_jellyfish_chain_t chain;
+    fossil_ai_jellyfish_init(&chain);
+
+    /* Simulate learning the prompt and a canned output */
+    const char *mock_output = "processed.";
+    fossil_ai_jellyfish_learn(&chain, prompt, mock_output);
+
+    float confidence = 0.0f;
+    fossil_sys_memory_t reasoned_output = fossil_sys_memory_calloc(1, 256);
+    const fossil_ai_jellyfish_block_t *block = NULL;
+    bool found = fossil_ai_jellyfish_reason_verbose(&chain, prompt, (char *)reasoned_output, &confidence, &block);
+
+    cstring explanation = NULL;
+    if (explain && found && block) {
+        fossil_sys_memory_t block_explain = fossil_sys_memory_calloc(1, 256);
+        fossil_ai_jellyfish_block_explain(block, (char *)block_explain, 256);
+        explanation = fossil_io_cstring_create((char *)block_explain);
+        fossil_sys_memory_free(block_explain);
+    } else if (explain) {
+        explanation = fossil_io_cstring_create("Explanation: (no block found).\n");
+    } else {
+        explanation = fossil_io_cstring_create("");
+    }
+
+    cstring formatted = fossil_io_cstring_format_safe(out_sz,
         "[model=%s]\n"
-        "Answer: \"%s\" -> processed.\n"
+        "Answer: \"%s\" -> %s\n"
+        "Confidence: %.2f\n"
         "%s",
         model,
         prompt,
-        explain ? "Explanation: (placeholder reasoning output).\n" : ""
+        found ? (char *)reasoned_output : "Unknown",
+        confidence,
+        explanation
     );
-}
 
-/* --------------------------------------------------------------
- * PUBLIC API
- * -------------------------------------------------------------- */
-int fish_ask(const char *model_name, const char *prompt,
-             const char *file_path, int explain)
-{
-    if (!model_name || !prompt) {
-        fprintf(stderr, "fish_ask: invalid arguments.\n");
-        return -1;
-    }
+    fossil_sys_memory_set(out, 0, out_sz);
+    strncpy(out, formatted, out_sz - 1);
+    out[out_sz - 1] = '\0';
 
-    /* Prepare input buffer */
-    char combined_input[8192] = {0};
-
-    /* If file_path provided, append file contents to prompt */
-    if (file_path) {
-        FILE *fp = fopen(file_path, "r");
-        if (!fp) {
-            fprintf(stderr,
-                "fish_ask: failed to open input file '%s'.\n",
-                file_path);
-            return -1;
-        }
-
-        char filebuf[4096];
-        size_t r = fread(filebuf, 1, sizeof(filebuf)-1, fp);
-        filebuf[r] = '\0';
-        fclose(fp);
-
-        snprintf(combined_input, sizeof(combined_input),
-            "%s\n\n[Attached file contents:]\n%s",
-            prompt, filebuf);
-    } else {
-        strncpy(combined_input, prompt, sizeof(combined_input)-1);
-    }
-
-    /* Prepare output buffer */
-    char reply[16384];
-    memset(reply, 0, sizeof(reply));
-
-    /* Call internal backend generator */
-    backend_generate_reply(model_name, combined_input, explain,
-                           reply, sizeof(reply));
-
-    /* If writing output to a file */
-    if (file_path) {
-        FILE *fp = fopen(file_path, "w");
-        if (!fp) {
-            fprintf(stderr,
-                "fish_ask: failed to open output file '%s' for writing.\n",
-                file_path);
-            return -1;
-        }
-        fputs(reply, fp);
-        fclose(fp);
-
-        printf("fish_ask: output written to '%s'.\n", file_path);
-    } else {
-        /* STDOUT output */
-        printf("%s\n", reply);
-    }
-
-    return 0;
+    fossil_io_cstring_free(explanation);
+    fossil_io_cstring_free(formatted);
+    fossil_sys_memory_free(reasoned_output);
+    /* No need to cleanup chain for mock usage */
 }

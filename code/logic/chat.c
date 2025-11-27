@@ -17,97 +17,41 @@
 #define MAX_LINE    2048
 
 /* --------------------------------------------------------------
- * Internal stub model reply generator.
- * Replace with Jellyfish/Fossil AI call later.
+ * Internal Jellyfish model reply generator.
+ * Uses fossil_ai_jellyfish_chain_t for reasoning.
  * -------------------------------------------------------------- */
 static void backend_chat_reply(const char *model,
                                const char *user_msg,
                                char *out, size_t out_sz)
 {
-    snprintf(out, out_sz,
-        "[%s]: I received: \"%s\"\n",
-        model,
-        user_msg
-    );
-}
+    static fossil_ai_jellyfish_chain_t chain;
+    static int initialized = 0;
 
-/* --------------------------------------------------------------
- * fish_chat - Start an interactive chat session.
- * -------------------------------------------------------------- */
-int fish_chat(const char *model_name, int keep_context,
-              const char *save_file)
-{
-    if (!model_name) {
-        fprintf(stderr, "fish_chat: null model name.\n");
-        return -1;
+    if (!initialized) {
+        fossil_ai_jellyfish_init(&chain);
+        initialized = 1;
     }
 
-    char history[MAX_HISTORY] = {0};
-    char line[MAX_LINE];
-    char reply[MAX_LINE * 4];
+    // Allocate output buffer using memory API
+    fossil_sys_memory_t output_mem = fossil_sys_memory_alloc(MAX_LINE * 2);
+    char *output = (char *)output_mem;
+    float confidence = 0.0f;
+    const fossil_ai_jellyfish_block_t *block = NULL;
+    bool found = fossil_ai_jellyfish_reason_verbose(&chain, user_msg, output, &confidence, &block);
 
-    FILE *save = NULL;
-
-    if (save_file) {
-        save = fopen(save_file, "w");
-        if (!save) {
-            fprintf(stderr,
-                "fish_chat: failed to open '%s' for writing.\n",
-                save_file
-            );
-            return -1;
-        }
+    if (found) {
+        snprintf(out, out_sz,
+            "[{cyan}%s{normal}]: {yellow}%s{normal}\n{dim}(confidence: %.2f){normal}\n",
+            model, output, confidence);
+    } else {
+        snprintf(out, out_sz,
+            "[{cyan}%s{normal}]: I received: \"{yellow}%s{normal}\"\n",
+            model, user_msg);
     }
 
-    printf("=== Starting chat with model '%s' ===\n", model_name);
-    printf("(type '/exit' to quit)\n\n");
+    // Learn this input/output pair for future context
+    fossil_ai_jellyfish_learn(&chain, user_msg, out);
 
-    while (1) {
-        printf("You> ");
-        fflush(stdout);
-
-        if (!fgets(line, sizeof(line), stdin))
-            break;
-
-        /* Strip newline */
-        line[strcspn(line, "\n")] = 0;
-
-        if (strcmp(line, "/exit") == 0)
-            break;
-
-        /* Update history if enabled */
-        if (keep_context) {
-            strncat(history, "You: ", sizeof(history)-1);
-            strncat(history, line, sizeof(history)-1);
-            strncat(history, "\n", sizeof(history)-1);
-        }
-
-        /* Generate model reply */
-        backend_chat_reply(model_name, line, reply, sizeof(reply));
-
-        printf("%s", reply);
-
-        if (keep_context) {
-            strncat(history, reply, sizeof(history)-1);
-        }
-
-        /* Save to file if enabled */
-        if (save) {
-            fputs("You: ", save);
-            fputs(line, save);
-            fputc('\n', save);
-
-            fputs(reply, save);
-            fflush(save);
-        }
-    }
-
-    printf("\n=== Chat session ended ===\n");
-
-    if (save) {
-        fclose(save);
-        printf("Chat history saved to '%s'\n", save_file);
-    }
-
-    return 0;
+    // Free output buffer
+    fossil_sys_memory_free(output_mem);
 }

@@ -25,107 +25,113 @@ int fish_dataset_split(float train_frac, float val_frac, float test_frac)
 {
     if (train_frac < 0 || val_frac < 0 || test_frac < 0 ||
         train_frac + val_frac + test_frac != 1.0f) {
-        printf("fish_dataset_split: Fractions must sum to 1.0\n");
+        fossil_io_printf("{red,bold}fish_dataset_split: Fractions must sum to 1.0{normal}\n");
         return -1;
     }
 
-    const char *dataset_path = "datasets/current.dataset";
-    FILE *fp = fopen(dataset_path, "r");
-    if (!fp) {
-        printf("fish_dataset_split: No active dataset found.\n");
+    ccstring dataset_path = "datasets/current.dataset";
+    fossil_io_file_t fin, ftrain, fval, ftest;
+
+    if (fossil_io_file_open(&fin, dataset_path, "r") != 0) {
+        fossil_io_printf("{red,bold}fish_dataset_split: No active dataset found.{normal}\n");
         return -1;
     }
 
-    // Open output files
-    FILE *ftrain = fopen("datasets/train.dataset", "w");
-    FILE *fval   = fopen("datasets/val.dataset", "w");
-    FILE *ftest  = fopen("datasets/test.dataset", "w");
-    if (!ftrain || !fval || !ftest) {
-        fclose(fp);
-        if (ftrain) fclose(ftrain);
-        if (fval) fclose(fval);
-        if (ftest) fclose(ftest);
-        printf("fish_dataset_split: Failed to create output files.\n");
+    if (fossil_io_file_open(&ftrain, "datasets/train.dataset", "w") != 0 ||
+        fossil_io_file_open(&fval,   "datasets/val.dataset",   "w") != 0 ||
+        fossil_io_file_open(&ftest,  "datasets/test.dataset",  "w") != 0) {
+        fossil_io_file_close(&fin);
+        if (fossil_io_file_is_open(&ftrain)) fossil_io_file_close(&ftrain);
+        if (fossil_io_file_is_open(&fval))   fossil_io_file_close(&fval);
+        if (fossil_io_file_is_open(&ftest))  fossil_io_file_close(&ftest);
+        fossil_io_printf("{red,bold}fish_dataset_split: Failed to create output files.{normal}\n");
         return -1;
     }
 
     // Read header
     char header[4096];
-    if (!fgets(header, sizeof(header), fp)) {
-        fclose(fp); fclose(ftrain); fclose(fval); fclose(ftest);
-        printf("fish_dataset_split: Dataset empty.\n");
+    if (!fgets(header, sizeof(header), fin.file)) {
+        fossil_io_file_close(&fin); fossil_io_file_close(&ftrain);
+        fossil_io_file_close(&fval); fossil_io_file_close(&ftest);
+        fossil_io_printf("{red,bold}fish_dataset_split: Dataset empty.{normal}\n");
         return -1;
     }
-    fputs(header, ftrain);
-    fputs(header, fval);
-    fputs(header, ftest);
+    fossil_io_fputs(&ftrain, header);
+    fossil_io_fputs(&fval, header);
+    fossil_io_fputs(&ftest, header);
 
     // Count lines (rows)
     int row_count = 0;
     char line[4096];
-    while (fgets(line, sizeof(line), fp)) row_count++;
+    while (fgets(line, sizeof(line), fin.file)) row_count++;
 
     if (row_count == 0) {
-        fclose(fp); fclose(ftrain); fclose(fval); fclose(ftest);
-        printf("fish_dataset_split: Dataset has no rows.\n");
+        fossil_io_file_close(&fin); fossil_io_file_close(&ftrain);
+        fossil_io_file_close(&fval); fossil_io_file_close(&ftest);
+        fossil_io_printf("{red,bold}fish_dataset_split: Dataset has no rows.{normal}\n");
         return -1;
     }
 
     // Rewind to data lines
-    fseek(fp, 0, SEEK_SET);
-    fgets(header, sizeof(header), fp); // skip header
+    fossil_io_file_rewind(&fin);
+    fgets(header, sizeof(header), fin.file); // skip header
 
-    // Allocate array to shuffle rows
-    char **rows = (char **)malloc(sizeof(char *) * row_count);
+    // Allocate array to shuffle rows using fossil_sys_memory_alloc
+    cstring *rows = (cstring *)fossil_sys_memory_alloc(sizeof(cstring) * row_count);
     if (!rows) {
-        fclose(fp); fclose(ftrain); fclose(fval); fclose(ftest);
-        printf("fish_dataset_split: Memory allocation failed.\n");
+        fossil_io_file_close(&fin); fossil_io_file_close(&ftrain);
+        fossil_io_file_close(&fval); fossil_io_file_close(&ftest);
+        fossil_io_printf("{red,bold}fish_dataset_split: Memory allocation failed.{normal}\n");
         return -1;
     }
 
     int idx = 0;
-    while (fgets(line, sizeof(line), fp)) {
+    while (fgets(line, sizeof(line), fin.file)) {
         line[strcspn(line, "\r\n")] = 0;
-        rows[idx] = strdup(line);
+        rows[idx] = fossil_io_cstring_create(line);
         if (!rows[idx]) {
-            printf("fish_dataset_split: Memory allocation failed for row.\n");
-            for (int j=0; j<idx; ++j) free(rows[j]);
-            free(rows);
-            fclose(fp); fclose(ftrain); fclose(fval); fclose(ftest);
+            fossil_io_printf("{red,bold}fish_dataset_split: Memory allocation failed for row.{normal}\n");
+            for (int j=0; j<idx; ++j) fossil_io_cstring_free(rows[j]);
+            fossil_sys_memory_free(rows);
+            fossil_io_file_close(&fin); fossil_io_file_close(&ftrain);
+            fossil_io_file_close(&fval); fossil_io_file_close(&ftest);
             return -1;
         }
         idx++;
     }
-    fclose(fp);
+    fossil_io_file_close(&fin);
 
     // Shuffle rows
     srand((unsigned int)time(NULL));
     for (int i = row_count - 1; i > 0; --i) {
         int j = rand() % (i + 1);
-        char *tmp = rows[i];
-        rows[i] = rows[j];
-        rows[j] = tmp;
+        fossil_sys_memory_swap(&rows[i], &rows[j], sizeof(cstring));
     }
 
     int train_end = (int)(train_frac * row_count);
     int val_end   = train_end + (int)(val_frac * row_count);
 
-    // Write rows to files
+    // Write rows to files and hash each row for fingerprinting
+    uint8_t hash_buf[32];
     for (int i = 0; i < row_count; ++i) {
-        FILE *out = (i < train_end) ? ftrain :
-                    (i < val_end)   ? fval :
-                                     ftest;
-        fprintf(out, "%s\n", rows[i]);
-        free(rows[i]);
+        fossil_io_file_t *out = (i < train_end) ? &ftrain :
+                                (i < val_end)   ? &fval :
+                                                  &ftest;
+        fossil_io_fprintf(out, "%s\n", rows[i]);
+        fossil_ai_jellyfish_hash(rows[i], "", hash_buf);
+        fossil_io_cstring_free(rows[i]);
     }
-    free(rows);
+    fossil_sys_memory_free(rows);
 
-    fclose(ftrain);
-    fclose(fval);
-    fclose(ftest);
+    fossil_io_file_close(&ftrain);
+    fossil_io_file_close(&fval);
+    fossil_io_file_close(&ftest);
 
-    printf("Dataset split completed: %d train, %d val, %d test rows\n",
-           train_end, val_end - train_end, row_count - val_end);
+    fossil_io_printf(
+        "{green,bold}Dataset split completed:{normal} "
+        "{yellow}%d train{normal}, {cyan}%d val{normal}, {magenta}%d test rows{normal}\n",
+        train_end, val_end - train_end, row_count - val_end
+    );
 
     return 0;
 }

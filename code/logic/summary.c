@@ -26,15 +26,16 @@ typedef struct {
 } VocabEntry;
 
 static void strtolower_inplace(char *s) {
-    while (*s) { *s = (char)tolower((unsigned char)*s); s++; }
+    cstring lower = fossil_io_cstring_to_lower(s);
+    if (lower) {
+        strcpy(s, lower);
+        fossil_io_cstring_free(lower);
+    }
 }
 
 /* Trim leading/trailing whitespace */
 static char *trim(char *s) {
-    while (*s && isspace((unsigned char)*s)) s++;
-    if (*s == 0) return s;
-    char *end = s + strlen(s) - 1;
-    while (end > s && isspace((unsigned char)*end)) { *end = '\0'; end--; }
+    fossil_io_cstring_trim(s);
     return s;
 }
 
@@ -45,16 +46,13 @@ static int split_sentences(char *content, char *sentences[], int max_sentences) 
     char *start = p;
     while (*p && count < max_sentences) {
         if (*p == '.' || *p == '?' || *p == '!' || *p == '\n') {
-            // include character, then terminate sentence
             char save = p[1];
             p[1] = '\0';
             char *s = trim(start);
             if (*s) {
-                // duplicate so we own memory
-                sentences[count++] = strdup(s);
+                sentences[count++] = fossil_io_cstring_dup(s);
             }
             p[1] = save;
-            // skip separator
             p++;
             while (*p && isspace((unsigned char)*p)) p++;
             start = p;
@@ -62,10 +60,9 @@ static int split_sentences(char *content, char *sentences[], int max_sentences) 
         }
         p++;
     }
-    // last chunk if any
     if (*start && count < max_sentences) {
         char *s = trim(start);
-        if (*s) sentences[count++] = strdup(s);
+        if (*s) sentences[count++] = fossil_io_cstring_dup(s);
     }
     return count;
 }
@@ -94,7 +91,7 @@ static int tokenize_sentence(const char *sent, char words[][MAX_WORD_LEN], int m
 /* Vocabulary helpers using simple linear search (ok for moderate text sizes) */
 static int vocab_find(VocabEntry *vocab, int vcount, const char *word) {
     for (int i = 0; i < vcount; ++i)
-        if (strcmp(vocab[i].word, word) == 0) return i;
+        if (fossil_io_cstring_compare(vocab[i].word, word) == 0) return i;
     return -1;
 }
 
@@ -102,7 +99,7 @@ static int vocab_add(VocabEntry *vocab, int *vcount, const char *word) {
     int idx = vocab_find(vocab, *vcount, word);
     if (idx >= 0) return idx;
     if (*vcount >= MAX_VOCAB) return -1;
-    vocab[*vcount].word = strdup(word);
+    vocab[*vcount].word = fossil_io_cstring_dup(word);
     vocab[*vcount].df = 0;
     vocab[*vcount].tf_total = 0;
     return (*vcount)++;
@@ -117,22 +114,26 @@ static int vocab_add(VocabEntry *vocab, int *vcount, const char *word) {
 int fish_summary(const char *file_path, int depth, int time_flag)
 {
     if (!file_path) {
-        fprintf(stderr, "fish_summary: null file path\n");
+        fossil_io_printf("{red,bold}[Error]{normal} fish_summary: null file path\n");
         return -1;
     }
 
-    FILE *fp = fopen(file_path, "rb");
-    if (!fp) {
-        fprintf(stderr, "fish_summary: cannot open '%s'\n", file_path);
+    fossil_io_file_t file_stream;
+    if (fossil_io_file_open(&file_stream, file_path, "rb") != 0) {
+        fossil_io_printf("{red,bold}[Error]{normal} fish_summary: cannot open '%s'\n", file_path);
         return -1;
     }
 
-    char *content = malloc(MAX_INPUT_SIZE);
-    if (!content) { fclose(fp); fprintf(stderr, "fish_summary: OOM\n"); return -1; }
+    char *content = (char *)fossil_sys_memory_alloc(MAX_INPUT_SIZE);
+    if (!content) {
+        fossil_io_file_close(&file_stream);
+        fossil_io_printf("{red,bold}[Error]{normal} fish_summary: OOM\n");
+        return -1;
+    }
 
-    size_t r = fread(content, 1, MAX_INPUT_SIZE - 1, fp);
+    size_t r = fossil_io_file_read(&file_stream, content, 1, MAX_INPUT_SIZE - 1);
     content[r] = '\0';
-    fclose(fp);
+    fossil_io_file_close(&file_stream);
 
     clock_t t0 = 0, t1 = 0;
     if (time_flag) t0 = clock();
@@ -141,31 +142,31 @@ int fish_summary(const char *file_path, int depth, int time_flag)
     char *sentences[MAX_SENTENCES];
     int nsent = split_sentences(content, sentences, MAX_SENTENCES);
     if (nsent == 0) {
-        printf("[Summary] (empty or no sentences)\n");
-        free(content);
+        fossil_io_printf("{yellow,bold}[Summary]{normal} (empty or no sentences)\n");
+        fossil_sys_memory_free(content);
         return 0;
     }
 
     /* 2) Build vocab and per-sentence term lists */
-    VocabEntry *vocab = malloc(sizeof(VocabEntry) * MAX_VOCAB);
-    if (!vocab) { fprintf(stderr, "fish_summary: OOM vocab\n"); free(content); return -1; }
+    VocabEntry *vocab = (VocabEntry *)fossil_sys_memory_alloc(sizeof(VocabEntry) * MAX_VOCAB);
+    if (!vocab) {
+        fossil_io_printf("{red,bold}[Error]{normal} fish_summary: OOM vocab\n");
+        fossil_sys_memory_free(content);
+        return -1;
+    }
     int vcount = 0;
 
-    // per-sentence: array of word indices (unique presence) and counts
-    int *sent_word_counts[MAX_SENTENCES]; // parallel arrays sized to vcount after building
+    int *sent_word_counts[MAX_SENTENCES];
     int sent_word_counts_len[MAX_SENTENCES];
     for (int i = 0; i < nsent; ++i) { sent_word_counts[i] = NULL; sent_word_counts_len[i] = 0; }
 
-    // temporary storage of tokens per sentence
     char tokens[MAX_WORDS_SENT][MAX_WORD_LEN];
 
     for (int i = 0; i < nsent; ++i) {
         int tw = tokenize_sentence(sentences[i], tokens, MAX_WORDS_SENT);
-        // track unique words in sentence to compute DF
         int unique_indices[MAX_WORDS_SENT];
         int unique_count = 0;
 
-        // dynamic map from word idx -> count in sentence via linear arrays
         int idx_list[MAX_WORDS_SENT];
         int count_list[MAX_WORDS_SENT];
         int idx_list_len = 0;
@@ -179,7 +180,6 @@ int fish_summary(const char *file_path, int depth, int time_flag)
             }
             vocab[vidx].tf_total += 1;
 
-            // find in idx_list
             int found = -1;
             for (int z = 0; z < idx_list_len; ++z) {
                 if (idx_list[z] == vidx) { found = z; break; }
@@ -190,21 +190,18 @@ int fish_summary(const char *file_path, int depth, int time_flag)
                 idx_list[idx_list_len] = vidx;
                 count_list[idx_list_len] = 1;
                 idx_list_len++;
-                // mark unique for DF increment later
                 unique_indices[unique_count++] = vidx;
             }
         }
 
-        // increment DF for unique words in this sentence
         for (int u = 0; u < unique_count; ++u) {
             int vidx = unique_indices[u];
             vocab[vidx].df += 1;
         }
 
-        // allocate per-sentence pairs (vidx,count) as flat array: [vidx,count,vidx,count,...]
         if (idx_list_len > 0) {
             sent_word_counts_len[i] = idx_list_len;
-            sent_word_counts[i] = malloc(sizeof(int) * idx_list_len * 2);
+            sent_word_counts[i] = (int *)fossil_sys_memory_alloc(sizeof(int) * idx_list_len * 2);
             for (int z = 0; z < idx_list_len; ++z) {
                 sent_word_counts[i][2*z] = idx_list[z];
                 sent_word_counts[i][2*z+1] = count_list[z];
@@ -216,10 +213,19 @@ int fish_summary(const char *file_path, int depth, int time_flag)
     }
 
     /* 3) Compute IDF and sentence scores (TF * IDF sum) */
-    double *idf = malloc(sizeof(double) * vcount);
-    if (!idf) { fprintf(stderr, "fish_summary: OOM idf\n"); goto cleanup; }
+    double *idf = (double *)fossil_sys_memory_alloc(sizeof(double) * vcount);
+    if (!idf) {
+        fossil_io_printf("{red,bold}[Error]{normal} fish_summary: OOM idf\n");
+        for (int i = 0; i < nsent; ++i) {
+            fossil_io_cstring_free(sentences[i]);
+            if (sent_word_counts[i]) fossil_sys_memory_free(sent_word_counts[i]);
+        }
+        for (int v = 0; v < vcount; ++v) fossil_io_cstring_free(vocab[v].word);
+        fossil_sys_memory_free(vocab);
+        fossil_sys_memory_free(content);
+        return -1;
+    }
     for (int v = 0; v < vcount; ++v) {
-        // smooth idf
         idf[v] = log((double)nsent / (1.0 + (double)vocab[v].df));
     }
 
@@ -235,7 +241,6 @@ int fish_summary(const char *file_path, int depth, int time_flag)
         sent_score[i] = score;
     }
 
-    /* 4) Choose K sentences based on depth */
     int K;
     if (depth <= 1) K = 1;
     else if (depth == 2) K = 3;
@@ -243,7 +248,6 @@ int fish_summary(const char *file_path, int depth, int time_flag)
     else K = 10;
     if (K > nsent) K = nsent;
 
-    /* select top-K by score, then output in original order */
     int selected_idx[MAX_SENTENCES] = {0};
     for (int k = 0; k < K; ++k) {
         int best = -1;
@@ -258,33 +262,29 @@ int fish_summary(const char *file_path, int depth, int time_flag)
         if (best >= 0) selected_idx[best] = 1;
     }
 
-    /* collect selected indices in order */
     int out_order[MAX_SENTENCES];
     int out_count = 0;
     for (int i = 0; i < nsent; ++i) if (selected_idx[i]) out_order[out_count++] = i;
 
-    /* print summary */
-    printf("=== Extractive Summary (depth=%d) ===\n\n", depth);
+    fossil_io_printf("{cyan,bold}=== Extractive Summary (depth=%d) ==={normal}\n\n", depth);
     for (int i = 0; i < out_count; ++i) {
         int si = out_order[i];
-        printf("%s\n\n", sentences[si]);
+        fossil_io_printf("{green}%s{normal}\n\n", sentences[si]);
     }
 
     if (time_flag) {
         t1 = clock();
         double elapsed = (double)(t1 - t0) / (double)CLOCKS_PER_SEC;
-        printf("[Timing] summary generated in %.4f seconds\n", elapsed);
+        fossil_io_printf("{yellow}[Timing]{normal} summary generated in %.4f seconds\n", elapsed);
     }
 
-cleanup:
-    /* free memory */
     for (int i = 0; i < nsent; ++i) {
-        free(sentences[i]);
-        if (sent_word_counts[i]) free(sent_word_counts[i]);
+        fossil_io_cstring_free(sentences[i]);
+        if (sent_word_counts[i]) fossil_sys_memory_free(sent_word_counts[i]);
     }
-    for (int v = 0; v < vcount; ++v) free(vocab[v].word);
-    free(vocab);
-    free(idf);
-    free(content);
+    for (int v = 0; v < vcount; ++v) fossil_io_cstring_free(vocab[v].word);
+    fossil_sys_memory_free(vocab);
+    fossil_sys_memory_free(idf);
+    fossil_sys_memory_free(content);
     return 0;
 }

@@ -25,11 +25,15 @@ static float compute_metric_from_hash(const uint8_t *hash, size_t len) {
 
 /**
  * @brief Generate a metric from input/output using the chain's hash function.
+ * Uses fossil_ai_jellyfish_hash as per prototype.
  */
 static float compute_metric_from_io(const char *input, const char *output) {
-       uint8_t hash[FOSSIL_JELLYFISH_HASH_SIZE];
+       fossil_sys_memory_t hash_mem = fossil_sys_memory_alloc(FOSSIL_JELLYFISH_HASH_SIZE);
+       uint8_t *hash = (uint8_t *)hash_mem;
        fossil_ai_jellyfish_hash(input, output, hash);
-       return compute_metric_from_hash(hash, FOSSIL_JELLYFISH_HASH_SIZE);
+       float score = compute_metric_from_hash(hash, FOSSIL_JELLYFISH_HASH_SIZE);
+       fossil_sys_memory_free(hash_mem);
+       return score;
 }
 
 /**
@@ -44,18 +48,19 @@ int fish_test(const char *model_name, const char *dataset_path,
        }
 
        // Build file path
-       char filepath[512];
-       snprintf(filepath, sizeof(filepath), "%s.jfchain", model_name);
+       cstring filepath = fossil_io_cstring_format("%s.jfchain", model_name);
 
        // Load the model chain
        fossil_ai_jellyfish_chain_t chain;
        if (fossil_ai_jellyfish_load(&chain, filepath) != 0) {
               fossil_io_printf("{red,bold}fish_test: failed to load model: %s{normal}\n", filepath);
+              fossil_io_cstring_free(filepath);
               return -1;
        }
 
        if (chain.count == 0) {
               fossil_io_printf("{yellow,bold}fish_test: model has no commits.{normal}\n");
+              fossil_io_cstring_free(filepath);
               return -1;
        }
 
@@ -65,26 +70,28 @@ int fish_test(const char *model_name, const char *dataset_path,
                  model_name,
                  dataset_path ? dataset_path : "N/A");
 
-       // Copy metrics list because strtok modifies it
-       char metrics_copy[256];
-       strncpy(metrics_copy, metrics_list, sizeof(metrics_copy) - 1);
-       metrics_copy[sizeof(metrics_copy) - 1] = '\0';
+       // Copy metrics list using memory API
+       cstring metrics_copy = fossil_sys_memory_strdup(metrics_list);
 
-       // Prepare optional results file
-       FILE *out = NULL;
+       // Prepare optional results file using fossil_io_file_t
+       fossil_io_file_t out_file;
+       fossil_io_file_t *out = NULL;
        if (save_file) {
-              out = fopen(save_file, "w");
-              if (!out) {
+              if (fossil_io_file_open(&out_file, save_file, "w") == 0) {
+                     out = &out_file;
+              } else {
                      fossil_io_printf("{red,bold}fish_test: could not open save file.{normal}\n");
+                     fossil_io_cstring_free(filepath);
+                     fossil_sys_memory_free(metrics_copy);
                      return -1;
               }
        }
 
-       // Parse comma-separated metrics
-       char *token = strtok(metrics_copy, ",");
+       // Parse comma-separated metrics using fossil_io_cstring_token
+       cstring saveptr = NULL;
+       cstring token = fossil_io_cstring_token(metrics_copy, ",", &saveptr);
        while (token) {
-              // Trim whitespace
-              while (*token == ' ' || *token == '\t') token++;
+              fossil_io_cstring_trim(token);
 
               // Use input/output from latest block for metric calculation
               float score = compute_metric_from_io(
@@ -92,13 +99,21 @@ int fish_test(const char *model_name, const char *dataset_path,
                      latest->output
               );
 
-              fossil_io_printf("  {blue,bold}Metric %-12s{normal} = {yellow,bold}%.2f{normal}\n", token, score);
-              if (out) fossil_io_fprintf(out, "%s=%.2f\n", token, score);
+              // Use robust terminal formatting functions for output
+              fossil_io_printf("{blue,bold}Metric %-12s{normal} = {yellow,bold}%.2f{normal}\n", token, score);
+              if (out) {
+                     char line[512];
+                     snprintf(line, sizeof(line), "%s=%.2f\n", token, score);
+                     fossil_io_file_write(out, line, 1, strlen(line));
+              }
 
-              token = strtok(NULL, ",");
+              token = fossil_io_cstring_token(NULL, ",", &saveptr);
        }
 
-       if (out) fclose(out);
+       if (out) fossil_io_file_close(out);
+
+       fossil_io_cstring_free(filepath);
+       fossil_sys_memory_free(metrics_copy);
 
        return 0;
 }
